@@ -11,3 +11,9 @@ build-eb.sh
 connfig.py
 get-pip.py
 
+.idea/workspace.xml
+.idea/anagram-api.iml
+.idea/dbnavigator.xml
+.idea/misc.xml
+.idea/modules.xml
+.idea/vcs.xml
