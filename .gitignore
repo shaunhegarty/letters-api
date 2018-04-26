@@ -1,0 +1,13 @@
+
+# Elastic Beanstalk Files
+.elasticbeanstalk/*
+!.elasticbeanstalk/*.cfg.yml
+!.elasticbeanstalk/*.global.yml
+*.pyc
+
+.ebextensions/*
+eb-anagram/*
+build-eb.sh
+connfig.py
+get-pip.py
+
