@@ -1,7 +1,7 @@
 import psycopg2 as psql
 import sys
-import letters
-from config import CONN_STRING
+from anagrammer import letters
+from anagrammer.config import CONN_STRING
 
 
 def binary_search(search_list, target):

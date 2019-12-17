@@ -3,7 +3,7 @@ import sys
 import psycopg2 as psql
 import logging
 from psycopg2.extras import execute_batch
-from config import CONN_STRING
+from anagrammer.config import CONN_STRING
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)

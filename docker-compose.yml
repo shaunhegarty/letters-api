@@ -3,9 +3,9 @@ services:
     web:
         build: .
         ports:
-            - "5000:5000"
+            - "5000:80"
         volumes:
-            - .:/code
+            - .:/var/www/letters-api/
         environment:
             FLASK_ENV: development
         depends_on:
@@ -23,14 +23,20 @@ services:
             POSTGRES_PASSWORD: letters
         volumes:
             - pgVolume:/var/lib/postgresql/data
-            - ./logs/logs
+            - ./logs/logs # This may involve some permissioning on the folder in the container filesystem
+            # https://stackoverflow.com/questions/30848670/how-to-customize-the-configuration-file-of-the-official-postgresql-docker-image/41912295
         networks:
             api-network:
+                # The aliases can be used as host names when creating connections
                 aliases:
                     - pgLettersApi
+
+# Due to the way Docker works, you can't just refer to localhost. The most sensible way to do this 
+# seems to be create a network across the containers. 
 networks:
     api-network:
         driver: bridge
 
+# This creates a named volume for persisting data in the postgres db
 volumes:
     pgVolume:
