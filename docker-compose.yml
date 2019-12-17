@@ -1,0 +1,36 @@
+version: '3'
+services:
+    web:
+        build: .
+        ports:
+            - "5000:5000"
+        volumes:
+            - .:/code
+        environment:
+            FLASK_ENV: development
+        depends_on:
+            - "db"
+        networks:
+            - api-network
+    db:
+        image: "postgres"
+        restart: "always"
+        ports: 
+            - "5432:5432"
+        environment:
+            POSTGRES_DB: words
+            POSTGRES_USER: api
+            POSTGRES_PASSWORD: letters
+        volumes:
+            - pgVolume:/var/lib/postgresql/data
+            - ./logs/logs
+        networks:
+            api-network:
+                aliases:
+                    - pgLettersApi
+networks:
+    api-network:
+        driver: bridge
+
+volumes:
+    pgVolume:
