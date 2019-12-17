@@ -1,17 +1,23 @@
 ''' DB testing'''
+import sys 
 import psycopg2 as psql
+import logging
 from psycopg2.extras import execute_batch
-import sys
-import connfig        
+from config import CONN_STRING
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+handler = logging.StreamHandler(sys.stdout)
+logger.addHandler(handler)
 
 def create_tables(connection = None):
     if(connection == None):
-        sys.stdout.write("No connection")
+        logger.error("No connection")
         return
     '''Create dictionary tables and any others that may come up'''
     commands = (
         """
-        CREATE TABLE dictionary (
+        CREATE TABLE if not exists dictionary (
             word varchar(30) NOT NULL,
             dictionary varchar(30) NOT NULL,
             word_length int,
@@ -19,77 +25,51 @@ def create_tables(connection = None):
         )
         """,
         """
-        CREATE INDEX wordindex
+        CREATE INDEX if not exists wordindex
         ON dictionary (word)
         """
     )
 
-    try:
-        CURSOR = connection.cursor()
+    with connection.cursor() as CURSOR:
         for command in commands:
-            CURSOR.execute(command)
-        CURSOR.close()
-        connection.commit()
-    except (Exception, psql.DatabaseError) as error:
-        sys.stdout.write(str(error))
+            CURSOR.execute(command)            
+    connection.commit()
 
 def setup_dictionary(connection = None):
     if(connection == None):
-        sys.stdout.write("No connection")
+        logger.error("No connection")
         return
     
-    try:
-        CURSOR = connection.cursor()
+
+    with connection.cursor() as CURSOR:
         CURSOR.execute("DELETE FROM DICTIONARY")
 
-        SOWPODS = open('sowpods.txt', 'r')
-        DICTIONARY_NAME = 'sowpods'
+        with open('sowpods.txt', 'r') as SOWPODS:
+            DICTIONARY_NAME = 'sowpods'
 
-        CURSOR.execute(
-            "prepare dictplan as "
-            "insert into dictionary VALUES ($1, $2, $3)"
-        )
+            CURSOR.execute(
+                "prepare dictplan as "
+                "insert into dictionary VALUES ($1, $2, $3)"
+            )
 
-        count = 0
-        # for line in SOWPODS:
-        #     count = count + 1
-        #     word = line.rstrip().lstrip()
-        #     CURSOR.execute("execute dictplan (%s, %s, %s)",
-        #                 (word, DICTIONARY_NAME, len(word)))
-        #     if (count % 1000 == 0):
-        #         sys.stdout.write("\rAdded %s, %i words inserted" % (word, count))
-        #         sys.stdout.flush()
+            count = 0
 
-        data = []
-        # insert__query = 'insert into dictionary (word, dictionary, word_length) values %s'
-        for line in SOWPODS:
-            count = count + 1
-            word = line.rstrip().lstrip()
-            data.append((word, DICTIONARY_NAME, len(word)))
+            data = []        
+            for line in SOWPODS:
+                count = count + 1
+                word = line.rstrip().lstrip()
+                data.append((word, DICTIONARY_NAME, len(word)))
 
-            if (count % 5000 == 0):
-                execute_batch(CURSOR, "execute dictplan (%s, %s, %s)", data)
-                data = []
-                sys.stdout.write("\rAdded %s, %i words inserted" % (word, count))
-                sys.stdout.flush()
+                if (count % 5000 == 0):
+                    execute_batch(CURSOR, "execute dictplan (%s, %s, %s)", data)
+                    data = []
+                    logger.info("\rAdded %s, %i words inserted" % (word, count))
         execute_batch(CURSOR, "execute dictplan (%s, %s, %s)", data)
         data = []
-        sys.stdout.write("\rAdded %s, %i words inserted" % (word, count))
-        sys.stdout.flush()
+        logger.info("\rAdded %s, %i words inserted" % (word, count))        
+    connection.commit()
 
 
-
-        CURSOR.close()
-        connection.commit()
-    except (Exception, psql.DatabaseError) as error:
-        sys.stdout.write(str(error))
-
-try:
-    CONN = psql.connect(connfig.conn_string)
-    # create_tables(CONN)
-    setup_dictionary(CONN)
-# except (Exception) as error:
-    # sys.stdout.write(str(error))
-finally:
-    if CONN is not None:
-        CONN.close()
+with psql.connect(CONN_STRING) as conn:
+    create_tables(conn)
+    setup_dictionary(conn)

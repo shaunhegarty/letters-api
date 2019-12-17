@@ -1,7 +1,7 @@
 import psycopg2 as psql
 import sys
 import letters
-import connfig
+from config import CONN_STRING
 
 
 def binary_search(search_list, target):
@@ -31,20 +31,11 @@ class Dictionary(object):
         self.load_dictionary()
 
     def load_dictionary(self):
-        try:
-            conn = psql.connect(connfig.conn_string)
-
-            cursor = conn.cursor()
+        with psql.connect(CONN_STRING).cursor() as cursor:            
             cursor.execute("SELECT WORD FROM DICTIONARY")
-
             rows = cursor.fetchall()
-
             for row in rows:
-                self.words.append(row[0])
-        except psql.Error as e:
-            self.errorMessage = "error" + str(e)
-            sys.stdout.write(self.errorMessage)
-            pass
+                self.words.append(row[0])    
 
     def get_error_output(self):
         return self.errorMessage

@@ -4,7 +4,6 @@ from flask import jsonify
 from flask import request
 import sys
 import dictionary
-import connfig
 
 application = Flask(__name__)
 
