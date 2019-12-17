@@ -2,6 +2,7 @@ version: '3'
 services:
     web:
         build: .
+        restart: "always"
         ports:
             - "5000:80"
         volumes:
@@ -11,7 +12,7 @@ services:
         depends_on:
             - "db"
         networks:
-            - api-network
+            - api-network        
     db:
         image: "postgres"
         restart: "always"
