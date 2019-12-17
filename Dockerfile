@@ -17,7 +17,7 @@ RUN apt-get update && apt-get install -y apache2 libapache2-mod-wsgi-py3 python3
 RUN a2enmod wsgi
 
 # Copy apache conf and set permissions
-COPY letters-api.conf /etc/apache2/sites-available/letters-api.conf
+COPY deployment/letters-api.conf /etc/apache2/sites-available/letters-api.conf
 RUN chown -R www-data:www-data /var/www/letters-api/
 RUN chown www-data:www-data /etc/apache2/sites-available/letters-api.conf
 
