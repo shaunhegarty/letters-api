@@ -17,3 +17,5 @@ get-pip.py
 .idea/misc.xml
 .idea/modules.xml
 .idea/vcs.xml
+.idea/letters-api.iml
+.idea/inspectionProfiles/profiles_settings.xml
