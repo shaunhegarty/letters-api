@@ -27,7 +27,12 @@ def get_sub_anagrams(word):
     for word in anagrams:
         if best_only and len(word) != max:
             break
-        sub_anagrams[word] = len(word)
+        sub = sub_anagrams.get(len(word), {})
+        sub_words = sub.get('words', [])
+        sub_words.append(word)
+        sub['words'] = sub_words
+        sub['count'] = len(sub_words)
+        sub_anagrams[len(word)] = sub
     return respond({"max":max, "words":sub_anagrams})
 
 @app.route('/validate/<word>')
