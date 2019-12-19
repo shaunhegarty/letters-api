@@ -1,5 +1,4 @@
-''' DB testing'''
-import sys 
+import sys
 import psycopg2 as psql
 import logging
 from psycopg2.extras import execute_batch
@@ -10,8 +9,9 @@ logger.setLevel(logging.INFO)
 handler = logging.StreamHandler(sys.stdout)
 logger.addHandler(handler)
 
-def create_tables(connection = None):
-    if(connection == None):
+
+def create_tables(connection=None):
+    if connection is None:
         logger.error("No connection")
         return
     '''Create dictionary tables and any others that may come up'''
@@ -32,14 +32,14 @@ def create_tables(connection = None):
 
     with connection.cursor() as CURSOR:
         for command in commands:
-            CURSOR.execute(command)            
+            CURSOR.execute(command)
     connection.commit()
 
-def setup_dictionary(connection = None):
-    if(connection == None):
+
+def setup_dictionary(connection=None):
+    if connection is None:
         logger.error("No connection")
         return
-    
 
     with connection.cursor() as CURSOR:
         CURSOR.execute("DELETE FROM DICTIONARY")
@@ -54,7 +54,7 @@ def setup_dictionary(connection = None):
 
             count = 0
 
-            data = []        
+            data = []
             for line in SOWPODS:
                 count = count + 1
                 word = line.rstrip().lstrip()
@@ -66,7 +66,7 @@ def setup_dictionary(connection = None):
                     logger.info("\rAdded %s, %i words inserted" % (word, count))
         execute_batch(CURSOR, "execute dictplan (%s, %s, %s)", data)
         data = []
-        logger.info("\rAdded %s, %i words inserted" % (word, count))        
+        logger.info("\rAdded %s, %i words inserted" % (word, count))
     connection.commit()
 
 
