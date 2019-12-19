@@ -57,7 +57,6 @@ class Dictionary(object):
     def get_conundrums(self, length):
         conundrums = self.conundrums_by_length.get(length, [])
         if len(conundrums) == 0:
-            logger.info('Building conundrum list')
             words_of_length = self.words_by_length.get(length, [])
             for index, word in enumerate(words_of_length):
                 word_anagrams = self.get_anagrams(word)
