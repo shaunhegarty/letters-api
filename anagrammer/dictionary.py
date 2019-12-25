@@ -53,6 +53,9 @@ class Dictionary(object):
         len_words = self.words_by_length.get(len(word), [])
         len_words.append(word)
         self.words_by_length[len(word)] = len_words
+    
+    def get_words_by_length(self, length):
+        return self.words_by_length.get(length, [])
 
     def get_conundrums(self, length):
         conundrums = self.conundrums_by_length.get(length, [])

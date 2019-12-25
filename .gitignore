@@ -19,3 +19,5 @@ get-pip.py
 .idea/vcs.xml
 .idea/letters-api.iml
 .idea/inspectionProfiles/profiles_settings.xml
+
+.vscode

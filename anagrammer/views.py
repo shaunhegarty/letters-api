@@ -50,6 +50,10 @@ def hello():
 def conundrum(length):
     return respond(d.get_conundrums(length))
 
+@app.route('/words/<int:length>/')
+def words(length):
+    return respond(d.get_words_by_length(length))
+
 
 def respond(data):
     response = jsonify(data)
