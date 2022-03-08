@@ -1,4 +1,4 @@
-FROM python:3.7-slim
+FROM python:3.9-slim
 WORKDIR /var/www/letters-api/
 
 # Set up Apache ENVs
@@ -16,15 +16,18 @@ RUN mkdir -p $APACHE_LOG_DIR
 RUN apt-get update && apt-get install -y apache2 libapache2-mod-wsgi-py3 python3-dev && apt-get clean
 RUN a2enmod wsgi
 
+# Install app requirements
+COPY requirements.txt requirements.txt
+RUN pip install -r requirements.txt
+
+COPY . /var/www/letters-api/
+
 # Copy apache conf and set permissions
 COPY deployment/letters-api.conf /etc/apache2/sites-available/letters-api.conf
 RUN chown -R www-data:www-data /var/www/letters-api/
 RUN chown www-data:www-data /etc/apache2/sites-available/letters-api.conf
 
-# Install app requirements
-COPY . /var/www/letters-api/
-COPY requirements.txt requirements.txt
-RUN pip install -r requirements.txt
+
 
 # Enable site
 RUN a2ensite letters-api
