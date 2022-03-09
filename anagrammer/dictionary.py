@@ -85,7 +85,7 @@ class Dictionary(object):
 
     def get_sub_anagrams(self, original):
         anagrams = set()
-        sorted_word = sorted(original)
+        sorted_word = sorted(original.lower())
 
         for i in range(2, len(sorted_word) + 1):
             for subset in combinations(sorted_word, i):

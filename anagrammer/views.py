@@ -14,8 +14,10 @@ def before_request():
 @app.after_request
 def after_request(response):
     diff = time.time() - g.start
-
     app.logger.info(f'Request Time {diff * 1000:.3f} ms')
+    
+    header = response.headers
+    header['Access-Control-Allow-Origin'] = '*'
     return response
 
 @app.route('/anagrams/<word>')
