@@ -1,6 +1,6 @@
 import psycopg2 as psql
-from anagrammer import letters
 from config.config import CONN_STRING
+from itertools import combinations
 
 
 def binary_search(search_list, target):
@@ -26,7 +26,7 @@ class Dictionary(object):
     errorMessage = ""
 
     def __init__(self):
-        self.words = []
+        self.words = set()
         self.words_by_length = {}
         self.conundrums_by_length = {} # i.e. words with precisely one valid configuration
         self.words_by_anagram = {}
@@ -38,7 +38,7 @@ class Dictionary(object):
             rows = cursor.fetchall()
             for row in rows:
                 word = row[0]
-                self.words.append(word)
+                self.words.add(word)
                 # get lists for words of specific length
                 self.store_word_by_length(word)
                 self.store_anagram(word)
@@ -61,7 +61,7 @@ class Dictionary(object):
         conundrums = self.conundrums_by_length.get(length, [])
         if len(conundrums) == 0:
             words_of_length = self.words_by_length.get(length, [])
-            for index, word in enumerate(words_of_length):
+            for _, word in enumerate(words_of_length):
                 word_anagrams = self.get_anagrams(word)
                 if not len(word_anagrams):
                     conundrums.append(word)
@@ -75,19 +75,23 @@ class Dictionary(object):
         return len(self.words)
 
     def contains_word(self, word):
-        return binary_search(self.words, word)
+        return word in self.words
 
     def get_anagrams(self, input_word):
         input_word = input_word.lower()
         sorted_word = ''.join(sorted(input_word))
-        anagrams = self.words_by_anagram.get(sorted_word, [])
+        anagrams = self.words_by_anagram.get(sorted_word, set())
         return [word for word in anagrams if word != input_word]
 
     def get_sub_anagrams(self, original):
-        anagrams = []
-        for word in self.words:
-            if (word != original) and letters.is_sub_anagram(word, original):
-                anagrams.append(word)
+        anagrams = set()
+        sorted_word = sorted(original)
+
+        for i in range(2, len(sorted_word) + 1):
+            for subset in combinations(sorted_word, i):
+                subset_word = ''.join(subset)
+                subset_anagrams = self.words_by_anagram.get(subset_word, [])
+                anagrams.update(subset_anagrams)
 
         anagrams = sorted(anagrams, key=len, reverse=True)
         return anagrams
