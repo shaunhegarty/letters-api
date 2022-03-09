@@ -15,7 +15,7 @@ def before_request():
 def after_request(response):
     diff = time.time() - g.start
 
-    app.logger.debug(f'Request Time {diff * 1000:.3f} ms')
+    app.logger.info(f'Request Time {diff * 1000:.3f} ms')
     return response
 
 @app.route('/anagrams/<word>')
