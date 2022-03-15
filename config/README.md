@@ -11,7 +11,7 @@ First Time Datebase Setup
 
 ## Postgres Cheat Sheet
 Connect with psql
-> `psql -d words -U api`
+> `docker exec -it letters_db psql -d words psql -U api`
 
 List databases
 >`\l`
