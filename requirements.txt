@@ -1,3 +1,7 @@
-Flask
-psycopg2-binary
-gunicorn[gevent]
+Flask==2.0.3
+psycopg2-binary==2.9.3
+gunicorn[gevent]==20.1.0
+
+# Dev only
+pylint==2.12.2
+black==22.1.0
