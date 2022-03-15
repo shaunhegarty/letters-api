@@ -3,22 +3,6 @@ from config.config import CONN_STRING
 from itertools import combinations
 
 
-def binary_search(search_list, target):
-    word = target.lower()
-    minimum = 0
-    maximum = len(search_list) - 1
-    while minimum <= maximum:
-        current_index = (minimum + maximum) // 2
-        if search_list[current_index] < word:
-            minimum = current_index + 1
-        elif search_list[current_index] > word:
-            maximum = current_index - 1
-        else:
-            return True
-
-    return False
-
-
 class Dictionary(object):
 
     """ This dictionary object will hold all of the words of dictionary in memory and provide some useful operations
@@ -34,7 +18,7 @@ class Dictionary(object):
 
     def load_dictionary(self):
         with psql.connect(CONN_STRING).cursor() as cursor:            
-            cursor.execute("SELECT WORD FROM DICTIONARY")
+            cursor.execute("SELECT WORD FROM DICTIONARY WHERE DICTIONARY='sowpods'")
             rows = cursor.fetchall()
             for row in rows:
                 word = row[0]

@@ -41,13 +41,13 @@ def setup_dictionary(connection=None):
         logger.error("No connection")
         return
 
-    with connection.cursor() as CURSOR:
-        CURSOR.execute("DELETE FROM DICTIONARY")
+    with connection.cursor() as cursor:
+        dictionary_name = 'sowpods'
+        cursor.execute("DELETE FROM DICTIONARY WHERE dictionary = %s", (dictionary_name, ))
 
-        with open('sowpods.txt', 'r') as SOWPODS:
-            DICTIONARY_NAME = 'sowpods'
+        with open('dictionaries/sowpods.txt', 'r') as dictionary:
 
-            CURSOR.execute(
+            cursor.execute(
                 "prepare dictplan as "
                 "insert into dictionary VALUES ($1, $2, $3)"
             )
@@ -55,17 +55,46 @@ def setup_dictionary(connection=None):
             count = 0
 
             data = []
-            for line in SOWPODS:
+            for line in dictionary:
                 count = count + 1
                 word = line.rstrip().lstrip()
-                data.append((word, DICTIONARY_NAME, len(word)))
+                data.append((word, dictionary_name, len(word)))
 
                 if (count % 5000 == 0):
-                    execute_batch(CURSOR, "execute dictplan (%s, %s, %s)", data)
+                    execute_batch(cursor, "execute dictplan (%s, %s, %s)", data)
                     data = []
                     logger.info("\rAdded %s, %i words inserted" % (word, count))
-        execute_batch(CURSOR, "execute dictplan (%s, %s, %s)", data)
+        execute_batch(cursor, "execute dictplan (%s, %s, %s)", data)
         data = []
+        logger.info("\rAdded %s, %i words inserted" % (word, count))
+    connection.commit()
+
+    with connection.cursor() as cursor:
+        with open('dictionaries/common.frequency.csv', 'r') as dictionary:
+            dictionary_name = 'common'
+
+            cursor.execute("DELETE FROM DICTIONARY WHERE dictionary = %s", (dictionary_name, ))
+
+            count = 0
+            data = []
+            error_in_previous = False
+            for line in dictionary:
+                if error_in_previous:
+                    logger.info("Couldn't Split line before %s", line)
+                    error_in_previous = False
+                count = count + 1
+                try:
+                    word = line.split()[0].rstrip().lstrip()
+                    data.append((word, dictionary_name, len(word)))
+
+                    if (count % 5000 == 0):
+                        execute_batch(cursor, "execute dictplan (%s, %s, %s)", data)
+                        data = []
+                        logger.info("\rAdded %s, %i words inserted" % (word, count))
+                except IndexError:
+                    error_in_previous = True
+                    logger.info("Couldn't Split %s", line)
+        execute_batch(cursor, "execute dictplan (%s, %s, %s)", data)
         logger.info("\rAdded %s, %i words inserted" % (word, count))
     connection.commit()
 
