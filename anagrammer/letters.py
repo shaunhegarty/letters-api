@@ -8,8 +8,8 @@ def is_anagram(word1, word2):
     if len(word1) != len(word2):
         return False
 
-    sorted_word1 = ''.join(sorted(word1.lower()))
-    sorted_word2 = ''.join(sorted(word2.lower()))
+    sorted_word1 = "".join(sorted(word1.lower()))
+    sorted_word2 = "".join(sorted(word2.lower()))
     return sorted_word1 == sorted_word2
 
 
