@@ -6,7 +6,7 @@ Initial 'Prod' Deployment
 > `docker-compose up --build -d`
 
 First Time Datebase Setup
->`docker exec api python config/insertdictionary.py`
+>`docker exec api python -m config.insertdictionary`
 
 
 ## Postgres Cheat Sheet
