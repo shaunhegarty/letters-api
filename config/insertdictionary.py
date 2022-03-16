@@ -2,7 +2,7 @@ import sys
 import logging
 import psycopg2 as psql
 from psycopg2.extras import execute_batch
-from config import CONN_STRING
+from .config import CONN_STRING
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -43,9 +43,9 @@ def create_tables(connection=None):
         """,
     )
 
-    with connection.cursor() as CURSOR:
+    with connection.cursor() as cursor:
         for command in commands:
-            CURSOR.execute(command)
+            cursor.execute(command)
     connection.commit()
 
 

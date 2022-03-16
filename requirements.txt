@@ -4,4 +4,5 @@ gunicorn[gevent]==20.1.0
 
 # Dev only
 pylint==2.12.2
+pylint-flask==0.6
 black==22.1.0

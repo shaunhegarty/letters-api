@@ -24,7 +24,7 @@ def is_sub_anagram(word1, word2):
 
     if len(word2) < len(word1):
         return False
-    elif len(word1) == 0:
+    if len(word1) == 0:
         return False
         # raise ValueError("First word is empty")
 
@@ -36,11 +36,11 @@ def is_sub_anagram(word1, word2):
     # This only works because their sorted
 
     word1_index = 0
-    for x in range(len(sorted_word2)):
-        if sorted_word1[word1_index] == sorted_word2[x]:
+    for word in sorted_word2:
+        if sorted_word1[word1_index] == word:
             word1_index += 1
         if word1_index >= len(sorted_word1):
             break
-    # print('word1_index: ' + str(word1_index) + '; length of sorted word1: ' + str(len(sorted_word1)))
+    # print(f'word1_index: {word1_index}; length of sorted word1: {len(sorted_word1)}')
 
     return word1_index == len(sorted_word1)

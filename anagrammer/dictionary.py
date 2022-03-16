@@ -1,23 +1,26 @@
+from itertools import combinations
 import psycopg2 as psql
 from config.config import CONN_STRING
-from itertools import combinations
 
 
-class Dictionary(object):
+class Dictionary:
 
-    """ This dictionary object will hold all of the words of dictionary in memory and provide some useful operations
-    to get the desired word """
+    """This dictionary object will hold all of the words of dictionary in memory and provide some
+    useful operations to get the desired word"""
+
     errorMessage = ""
 
     def __init__(self):
         self.words = set()
         self.words_by_length = {}
-        self.conundrums_by_length = {} # i.e. words with precisely one valid configuration
+        self.conundrums_by_length = (
+            {}
+        )  # i.e. words with precisely one valid configuration
         self.words_by_anagram = {}
         self.load_dictionary()
 
     def load_dictionary(self):
-        with psql.connect(CONN_STRING).cursor() as cursor:            
+        with psql.connect(CONN_STRING).cursor() as cursor:
             cursor.execute("SELECT WORD FROM DICTIONARY WHERE DICTIONARY='sowpods'")
             rows = cursor.fetchall()
             for row in rows:
@@ -28,7 +31,7 @@ class Dictionary(object):
                 self.store_anagram(word)
 
     def store_anagram(self, word):
-        sorted_word = ''.join(sorted(word.lower()))
+        sorted_word = "".join(sorted(word.lower()))
         anagram_list = self.words_by_anagram.get(sorted_word, [])
         anagram_list.append(word)
         self.words_by_anagram[sorted_word] = anagram_list
@@ -37,7 +40,7 @@ class Dictionary(object):
         len_words = self.words_by_length.get(len(word), [])
         len_words.append(word)
         self.words_by_length[len(word)] = len_words
-    
+
     def get_words_by_length(self, length):
         return self.words_by_length.get(length, [])
 
@@ -47,7 +50,7 @@ class Dictionary(object):
             words_of_length = self.words_by_length.get(length, [])
             for _, word in enumerate(words_of_length):
                 word_anagrams = self.get_anagrams(word)
-                if not len(word_anagrams):
+                if not word_anagrams:
                     conundrums.append(word)
             self.conundrums_by_length[length] = conundrums
         return conundrums
@@ -63,7 +66,7 @@ class Dictionary(object):
 
     def get_anagrams(self, input_word):
         input_word = input_word.lower()
-        sorted_word = ''.join(sorted(input_word))
+        sorted_word = "".join(sorted(input_word))
         anagrams = self.words_by_anagram.get(sorted_word, set())
         return [word for word in anagrams if word != input_word]
 
@@ -73,13 +76,9 @@ class Dictionary(object):
 
         for i in range(2, len(sorted_word) + 1):
             for subset in combinations(sorted_word, i):
-                subset_word = ''.join(subset)
+                subset_word = "".join(subset)
                 subset_anagrams = self.words_by_anagram.get(subset_word, [])
                 anagrams.update(subset_anagrams)
 
         anagrams = sorted(anagrams, key=len, reverse=True)
         return anagrams
-
-
-
-
