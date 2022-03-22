@@ -16,6 +16,9 @@ Connect with psql
 List databases
 >`\l`
 
+List tables
+>`\dt`
+
 Connect to database
 >`\c database_name`
 

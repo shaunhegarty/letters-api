@@ -11,5 +11,36 @@ class Dictionary(Base):
     frequency = Column(Integer, nullable=True)
     source = Column(String(60), nullable=True)
 
+    def __repr__(self):
+        return self.__str__()
+
     def __str__(self):
         return f"{self.word}"
+
+
+class WordScore(Base):
+    __tablename__ = "wordscore"
+
+    word = Column(String(30), primary_key=True)
+    dictionary = Column(String(30), primary_key=True)
+    score = Column(Integer)
+
+    def __str__(self):
+        return f"{self.word}: Score: {self.score}"
+
+
+class Ladder(Base):
+    __tablename__ = "ladder"
+
+    pair = Column(String(30), primary_key=True)
+    dictionary = Column(String(30), primary_key=True)
+    chain = Column(String(300))
+    length = Column(Integer)
+    difficulty = Column(Integer, nullable=True)
+    variations = Column(Integer, nullable=True)
+    variant = Column(Integer, nullable=True)
+
+    def __str__(self):
+        variations_string = f"{self.variant} of {self.variations}."
+        difficulty_string = f"Difficulty: {self.difficulty}."
+        return f"{self.pair}: [{self.chain}]. {variations_string} {difficulty_string}"
