@@ -4,7 +4,7 @@ from flask import jsonify, request, g
 from flask.logging import create_logger
 from psycopg2.errors import UndefinedTable  # pylint: disable=no-name-in-module
 from anagrammer import app  # pylint: disable=cyclic-import
-from . import dictionary
+from . import dictionary, ladder
 
 # Initialize the app
 logger = create_logger(app)
@@ -79,6 +79,15 @@ def conundrum(length):
 @app.route("/words/<int:length>")
 def words(length):
     return respond(d.get_words_by_length(length))
+
+
+@app.route("/ladders/<word_pair>")
+def word_ladder(word_pair):
+    return respond(ladder.get_word_ladder_for_word_pair(word_pair))
+
+@app.route("/ladders/<int:word_length>")
+def word_ladders_by_length(word_length):
+    return respond(ladder.get_easy_ladders_by_word_length(word_length))
 
 
 def respond(data):

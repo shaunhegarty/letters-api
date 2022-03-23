@@ -37,8 +37,13 @@ class Ladder(Base):
     chain = Column(String(300))
     length = Column(Integer)
     difficulty = Column(Integer, nullable=True)
-    variations = Column(Integer, nullable=True)
-    variant = Column(Integer, nullable=True)
+    hardest_word_score = Column(Integer, nullable=True)
+    hardest_word = Column(String(30), nullable=True)
+    variations = Column(Integer)
+    variant = Column(Integer, primary_key=True)
+
+    def __repr__(self):
+        return self.__str__()
 
     def __str__(self):
         variations_string = f"{self.variant} of {self.variations}."

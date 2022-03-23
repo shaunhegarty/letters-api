@@ -89,6 +89,17 @@ def ladder_difficulty(ladder, word_scores):
     return word_score
 
 
+def get_hardest_word(ladder, word_scores):
+    hardest_word_score = 0
+    hardest_word = None
+    for word in ladder:
+        word_score = word_scores.get(word)
+        if word_score > hardest_word_score:
+            hardest_word_score = word_score
+            hardest_word = word
+    return hardest_word, hardest_word_score
+
+
 def get_word_scores():
 
     with Session(engine) as session:
@@ -126,14 +137,18 @@ def insert_word_ladders(word_scores):
         for key in unique_ladder_keys:
             ladder_list = data.get(key)
             for index, ladder in enumerate(ladder_list):
+                hardest_word, hardest_word_score = get_hardest_word(ladder, word_scores)
                 values.append(
                     {
                         "pair": key,
                         "dictionary": "common",
                         "chain": ",".join(ladder),
+                        "length": len(ladder),
                         "difficulty": ladder_difficulty(ladder, word_scores),
+                        "hardest_word": hardest_word,
+                        "hardest_word_score": hardest_word_score,
                         "variations": len(ladder_list),
-                        "variant": index,
+                        "variant": index + 1,
                     }
                 )
         logger.debug("Updating Database with %s records", len(values))
@@ -141,7 +156,7 @@ def insert_word_ladders(word_scores):
             statement = insert(models.Ladder).values(values).on_conflict_do_nothing()
             session.execute(statement)
             session.commit()
-    logger.info("Done.")     
+    logger.info("Done.")
 
 
 def setup_ladders():
