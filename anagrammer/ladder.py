@@ -20,13 +20,12 @@ def word_pair_results_to_json(results):
     }
 
 
-def ladders_to_json(results, word_length=None):
-    key = f"{word_length}-ladders" if word_length else "ladders"
+def ladders_to_json(results):
     return {
-        key: {
-            r.pair: {"min_length": r.length, "difficulty": r.difficulty}
+        "ladders": [
+            {"pair": r.pair, "min_length": r.length, "difficulty": r.difficulty}
             for r in results
-        }
+        ]
     }
 
 
@@ -64,7 +63,7 @@ def get_ladders_by_difficulty_class(word_length: int, difficulty_class: int):
     results = get_ladders_by_length_and_difficulty(
         word_length=word_length, upper_bound=upper, lower_bound=lower
     )
-    return ladders_to_json(results, word_length=word_length)
+    return ladders_to_json(results)
 
 
 def get_easy_ladders_by_word_length(word_length):
@@ -76,7 +75,7 @@ def get_easy_ladders_by_word_length(word_length):
             .limit(100)
             .all()
         )
-        return ladders_to_json(results, word_length=word_length)
+        return ladders_to_json(results)
 
 
 def get_words_and_scores(word_dictionary, word_length):
