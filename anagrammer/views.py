@@ -85,9 +85,34 @@ def words(length):
 def word_ladder(word_pair):
     return respond(ladder.get_word_ladder_for_word_pair(word_pair))
 
+
 @app.route("/ladders/<int:word_length>")
 def word_ladders_by_length(word_length):
     return respond(ladder.get_easy_ladders_by_word_length(word_length))
+
+
+@app.route("/ladders/<int:difficulty_class>/<int:word_length>")
+def word_ladders_by_difficulty_and_length(difficulty_class, word_length):
+    return respond(
+        ladder.get_ladders_by_difficulty_class(
+            word_length=word_length, difficulty_class=difficulty_class
+        )
+    )
+
+
+@app.route("/ladders/words/<word_dictionary>/<int:length>")
+def word_scores(word_dictionary, length):
+    return respond(ladder.get_words_and_scores(word_dictionary, word_length=length))
+
+
+@app.route("/ladders/random/<int:difficulty_class>/<int:length>")
+def random_ladder(difficulty_class, length):
+    upper, lower = difficulty_class * 10000, (difficulty_class - 1) * 10000
+    return respond(
+        ladder.get_random_ladder_in_difficulty_range(
+            word_length=length, upper_bound=upper, lower_bound=lower
+        )
+    )
 
 
 def respond(data):
