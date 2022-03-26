@@ -21,12 +21,21 @@ def word_pair_results_to_json(results):
 
 
 def ladders_to_json(results):
-    return {
-        "ladders": [
-            {"pair": r.pair, "min_length": r.length, "difficulty": r.difficulty}
-            for r in results
-        ]
-    }
+    pair_set = set()
+    ladders = []
+    for r in results:
+        if r.pair not in pair_set:
+            ladders.append(
+                {
+                    "pair": r.pair,
+                    "min_length": r.length,
+                    "difficulty": r.difficulty,
+                    "solutions": r.variations,
+                }
+            )
+            pair_set.add(r.pair)
+
+    return {"ladders": ladders}
 
 
 def get_word_ladder_for_word_pair(word_pair: str):
