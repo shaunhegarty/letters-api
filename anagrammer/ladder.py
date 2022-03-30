@@ -1,7 +1,7 @@
 import random
 
 from sqlalchemy.orm import Session
-from sqlalchemy import func
+from sqlalchemy import func, or_
 
 from anagrammer.database import engine
 from anagrammer.models import Ladder, WordScore
@@ -63,23 +63,27 @@ def get_ladders_by_length_and_difficulty(word_length, upper_bound, lower_bound=0
 
 
 def difficulty_class_to_range(difficulty_class):
-    upper, lower = difficulty_class * 10000, (difficulty_class - 1) * 10000
+    upper, lower = max(difficulty_class) * 10000, (min(difficulty_class) - 1) * 10000
     return upper, lower
 
 
 def search_ladders(
-    word_length: int = 3,
-    difficulty: int = 1,
+    word_length: list[int] = 3,
+    difficulty: list[int] = 1,
     ladder_filter: str = None,
     page_size: int = 200,
 ):
     upper, lower = difficulty_class_to_range(difficulty_class=difficulty)
+    pair_lengths = (l * 2 + 1 for l in word_length)
+
     with Session(engine) as session:
         query = (
             session.query(Ladder)
-            .filter(func.length(Ladder.pair) == word_length * 2 + 1)
-            .filter(Ladder.difficulty < upper)
-            .filter(Ladder.difficulty > lower)
+            # .filter(func.length(Ladder.pair) == pair_lengths)
+            .filter(Ladder.difficulty < upper).filter(Ladder.difficulty > lower)
+        )
+        query = query.filter(
+            or_(False, *[func.length(Ladder.pair) == p for p in pair_lengths])
         )
         if ladder_filter:
             query = query.filter(Ladder.pair.contains(ladder_filter))

@@ -104,8 +104,8 @@ def word_ladders_by_difficulty_and_length(difficulty_class, word_length):
 def word_ladder_from_options():
     data = request.get_json()
     ladder_filter = data.get("ladder_filter", None)
-    difficulty = data.get("difficulty", 1)
-    word_length = data.get("length", 3)
+    difficulty = data.get("difficulty", [1])
+    word_length = data.get("length", [3])
     page_size = data.get("page_size", 200)
     return respond(
         ladder.search_ladders(word_length, difficulty, ladder_filter, page_size)
