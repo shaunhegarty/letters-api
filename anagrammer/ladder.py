@@ -68,23 +68,26 @@ def difficulty_class_to_range(difficulty_class):
 
 
 def search_ladders(
-    word_length: list[int] = 3,
-    difficulty: list[int] = 1,
+    word_length: list[int] = None,
+    difficulty: list[int] = None,
     ladder_filter: str = None,
     page_size: int = 200,
 ):
-    upper, lower = difficulty_class_to_range(difficulty_class=difficulty)
+
     pair_lengths = (l * 2 + 1 for l in word_length)
 
     with Session(engine) as session:
-        query = (
-            session.query(Ladder)
-            # .filter(func.length(Ladder.pair) == pair_lengths)
-            .filter(Ladder.difficulty < upper).filter(Ladder.difficulty > lower)
-        )
-        query = query.filter(
-            or_(False, *[func.length(Ladder.pair) == p for p in pair_lengths])
-        )
+        query = session.query(Ladder)
+
+        if difficulty:
+            upper, lower = difficulty_class_to_range(difficulty_class=difficulty)
+            query = query.filter(Ladder.difficulty < upper).filter(
+                Ladder.difficulty > lower
+            )
+        if word_length:
+            query = query.filter(
+                or_(False, *[func.length(Ladder.pair) == p for p in pair_lengths])
+            )
         if ladder_filter:
             query = query.filter(Ladder.pair.contains(ladder_filter))
         results = (
