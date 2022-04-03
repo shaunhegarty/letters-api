@@ -23,17 +23,17 @@ def word_pair_results_to_json(results):
 def ladders_to_json(results):
     pair_set = set()
     ladders = []
-    for r in results:
-        if r.pair not in pair_set:
+    for row in results:
+        if row.pair not in pair_set:
             ladders.append(
                 {
-                    "pair": r.pair,
-                    "min_length": r.length,
-                    "difficulty": r.difficulty,
-                    "solutions": r.variations,
+                    "pair": row.pair,
+                    "min_length": row.length,
+                    "difficulty": row.difficulty,
+                    "solutions": row.variations,
                 }
             )
-            pair_set.add(r.pair)
+            pair_set.add(row.pair)
 
     return {"ladders": ladders}
 
