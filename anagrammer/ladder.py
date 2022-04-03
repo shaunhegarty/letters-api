@@ -63,6 +63,7 @@ def get_ladders_by_length_and_difficulty(word_length, upper_bound, lower_bound=0
 
 
 def difficulty_class_to_range(difficulty_class):
+    difficulty_class = [int(c) for c in difficulty_class]
     upper, lower = max(difficulty_class) * 10000, (min(difficulty_class) - 1) * 10000
     return upper, lower
 
@@ -74,7 +75,7 @@ def search_ladders(
     page_size: int = 200,
 ):
 
-    pair_lengths = (l * 2 + 1 for l in word_length)
+    pair_lengths = (int(l) * 2 + 1 for l in word_length)
 
     with Session(engine) as session:
         query = session.query(Ladder)
