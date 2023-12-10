@@ -1,23 +1,2 @@
-
-# Elastic Beanstalk Files
-.elasticbeanstalk/*
-!.elasticbeanstalk/*.cfg.yml
-!.elasticbeanstalk/*.global.yml
-*.pyc
-
-.ebextensions/*
-eb-anagram/*
-build-eb.sh
-connfig.py
-get-pip.py
-
-.idea/workspace.xml
-.idea/anagram-api.iml
-.idea/dbnavigator.xml
-.idea/misc.xml
-.idea/modules.xml
-.idea/vcs.xml
-.idea/letters-api.iml
-.idea/inspectionProfiles/profiles_settings.xml
-
-.vscode
+.venv
+**/*.pyc

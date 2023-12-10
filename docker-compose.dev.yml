@@ -11,7 +11,6 @@ services:
             - "5001:5001"
         volumes:
             - .:/var/www/letters-api/
-            - /var/run/docker.sock:/var/run/docker.sock
         environment:
             FLASK_ENV: development
         depends_on:
