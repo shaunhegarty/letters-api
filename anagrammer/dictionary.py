@@ -1,6 +1,10 @@
 from itertools import combinations
-import psycopg2 as psql
-from config.config import CONN_STRING
+
+from sqlalchemy import select
+from sqlalchemy.orm import Session
+
+from anagrammer import models
+from anagrammer.database import engine
 
 
 class Dictionary:
@@ -20,11 +24,13 @@ class Dictionary:
         self.load_dictionary()
 
     def load_dictionary(self):
-        with psql.connect(CONN_STRING).cursor() as cursor:
-            cursor.execute("SELECT WORD FROM DICTIONARY WHERE DICTIONARY='sowpods'")
-            rows = cursor.fetchall()
+        with Session(engine) as session:
+            statement = select(models.Dictionary).where(
+                models.Dictionary.dictionary == "sowpods"
+            )
+            rows: list[models.Dictionary] = session.execute(statement).fetchall()
             for row in rows:
-                word = row[0]
+                word = row.word
                 self.words.add(word)
                 # get lists for words of specific length
                 self.store_word_by_length(word)
