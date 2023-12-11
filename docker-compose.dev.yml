@@ -28,6 +28,10 @@ services:
             POSTGRES_DB: words
             POSTGRES_USER: api
             POSTGRES_PASSWORD: letters
+            PGDATABASE: words  # pg vars are for psql
+            PGUSER: api
+            PGHOST: db
+            PGPASSWORD: letters
         volumes:
             - pgVolume:/var/lib/postgresql/data
         networks:
