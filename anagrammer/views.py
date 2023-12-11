@@ -2,7 +2,7 @@
 import time
 from flask import jsonify, request, g
 from flask.logging import create_logger
-from psycopg2.errors import UndefinedTable  # pylint: disable=no-name-in-module
+from sqlalchemy.exc import ProgrammingError
 from anagrammer import app  # pylint: disable=cyclic-import
 from . import dictionary, ladder
 
@@ -11,7 +11,7 @@ logger = create_logger(app)
 
 try:
     d = dictionary.Dictionary()
-except UndefinedTable as e:
+except ProgrammingError:
     logger.warning("Database not set up")
 
 
