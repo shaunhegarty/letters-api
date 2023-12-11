@@ -28,9 +28,9 @@ class Dictionary:
             statement = select(models.Dictionary).where(
                 models.Dictionary.dictionary == "sowpods"
             )
-            rows: list[models.Dictionary] = session.execute(statement).fetchall()
+            rows: list[models.Dictionary] = session.execute(statement).all()
             for row in rows:
-                word = row.word
+                word = row.Dictionary.word
                 self.words.add(word)
                 # get lists for words of specific length
                 self.store_word_by_length(word)
