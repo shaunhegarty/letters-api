@@ -6,7 +6,7 @@ COMPOSE := docker-compose -f docker-compose.dev.yml
 build:
 	$(COMPOSE) build
 
-run:
+run: build
 	$(COMPOSE) up -d
 
 run_dev:
