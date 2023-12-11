@@ -5,6 +5,7 @@ from typing import Optional
 class Dictionary(SQLModel, table=True):
     word: str = Field(primary_key=True)
     dictionary: str = Field(primary_key=True)
+    sorted_word: str = Field(index=True)
     word_length: int
     frequency: Optional[int]
     source: Optional[str]

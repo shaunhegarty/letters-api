@@ -36,6 +36,7 @@ def setup_dictionaries():
                         "word_length": len(word),
                         "dictionary": "common",
                         "source": source,
+                        "sorted_word": "".join(sorted(word.lower())),
                     }
                 )
             statement = (
