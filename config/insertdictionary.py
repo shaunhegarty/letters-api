@@ -9,7 +9,6 @@ from sqlalchemy import func
 from anagrammer import models
 from anagrammer.database import engine
 
-# Build database based on schema defined in models
 models.Base.metadata.create_all(bind=engine)
 
 
@@ -101,7 +100,6 @@ def get_hardest_word(ladder, word_scores):
 
 
 def get_word_scores():
-
     with Session(engine) as session:
         results = (
             session.query(
