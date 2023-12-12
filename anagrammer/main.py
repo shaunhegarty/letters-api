@@ -2,7 +2,7 @@ import logging
 from functools import cache
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
 from sqlalchemy.exc import ProgrammingError
 from sqlmodel import SQLModel, Session
 
@@ -96,20 +96,22 @@ def words(length: int):
     return d.get_words_by_length(length)
 
 
-@app.get("/ladders/{word_pair}")
+@app.get("/ladders/{word_length:int}")
+def word_ladders_by_length(word_length: int, session: Session = Depends(get_session)):
+    return ladder.get_easy_ladders_by_word_length(session, word_length)
+
+
+@app.get("/ladders/{word_pair:str}")
 def word_ladder(word_pair: str):
     return ladder.get_word_ladder_for_word_pair(word_pair)
 
 
-@app.get("/ladders/{word_length}")
-def word_ladders_by_length(word_length: int):
-    return ladder.get_easy_ladders_by_word_length(word_length)
-
-
 @app.get("/ladders/{difficulty_class}/{word_length}")
-def word_ladders_by_difficulty_and_length(difficulty_class: int, word_length: int):
+def word_ladders_by_difficulty_and_length(
+    difficulty_class: int, word_length: int, session: Session = Depends(get_session)
+):
     return ladder.get_ladders_by_difficulty_class(
-        word_length=word_length, difficulty_class=difficulty_class
+        session=session, word_length=word_length, difficulty_class=[difficulty_class]
     )
 
 

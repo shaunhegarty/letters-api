@@ -1,12 +1,17 @@
+import json
 import os
-import pytest
 
+import pytest
 from sqlalchemy import select
 from sqlalchemy_utils import create_database, database_exists
 from sqlmodel import Session, SQLModel, create_engine
 
-from anagrammer.models import Dictionary
-from config.insertdictionary import load_common, load_sowpods
+from anagrammer.ladder import (
+    get_easy_ladders_by_word_length,
+    get_ladders_by_length_and_difficulty,
+)
+from anagrammer.models import Dictionary, Ladder
+from config.insertdictionary import insert_word_ladder, load_common, load_sowpods
 
 POSTGRES_HOSTNAME = os.environ.get("POSTGRES_HOSTNAME", "localhost")
 SQLALCHEMY_DATABASE_URL = f"postgresql://api:letters@{POSTGRES_HOSTNAME}/"
@@ -47,6 +52,38 @@ def test_create_word(session: Session):
         .where(Dictionary.dictionary == "common")
     ).first()
     assert row.Dictionary.word == "the"
+
+
+def test_create_ladder(session: Session):
+    data: dict[str, list[list[str]]] = json.load(
+        open("test/ladders.json", "r", encoding="utf-8")
+    )
+
+    # get all the words
+    words = set()
+    for _, ladders in data.items():
+        for ladder in ladders:
+            for word in ladder:
+                words.add(word)
+
+    # build up a dummy word_scores dict
+    word_scores: dict[str, int] = {word: 1 for word in words}
+
+
+    # insert the test data
+    insert_word_ladder(data=data, word_scores=word_scores, session=session)
+
+    # go looking for it
+
+    results = get_ladders_by_length_and_difficulty(
+        word_length=4, upper_bound=1000, lower_bound=0, session=session
+    )
+    ladder1: Ladder = results[0]
+    assert ladder1.pair == "came-will"
+    
+    results = get_easy_ladders_by_word_length(word_length=4, session=session)
+    print(results)
+    assert False
 
 
 # class TestLadderSearch(unittest.TestCase):

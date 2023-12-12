@@ -1,0 +1,37 @@
+{
+    "much-work": [
+        [
+            "much",
+            "muck",
+            "mack",
+            "mark",
+            "wark",
+            "work"
+        ]
+    ],
+    "came-will": [
+        [
+            "came",
+            "wame",
+            "wale",
+            "wall",
+            "will"
+        ],
+        [
+            "came",
+            "wame",
+            "wale",
+            "wile",
+            "will"
+        ]
+    ],
+    "like-went": [
+        [
+            "like",
+            "line",
+            "lint",
+            "lent",
+            "went"
+        ]
+    ]
+}
