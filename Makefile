@@ -1,7 +1,7 @@
 # Define variables
 COMPOSE := docker-compose -f docker-compose.dev.yml
 
-.PHONY: build run run_dev db_only psql stop
+.PHONY: build run run_dev db_only psql stop logs
 
 build:
 	$(COMPOSE) build
@@ -10,7 +10,7 @@ run: build
 	$(COMPOSE) up -d
 
 run_dev:
-	. .venv/bin/activate && uvicorn anagrammer.main:app --reload
+	./startdev
 
 db_only: 
 	$(COMPOSE) up -d db
