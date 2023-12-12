@@ -13,4 +13,4 @@ COPY . /var/www/letters-api/
 
 # Run apache server
 EXPOSE 80
-CMD ["flask", "run", "--host=0.0.0.0", "--port", "5001"]
+CMD ["uvicorn", "anagrammer.main:app", "--reload", "--host", "0.0.0.0", "--port", "5001"]

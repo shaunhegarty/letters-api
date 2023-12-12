@@ -13,6 +13,7 @@ services:
             - .:/var/www/letters-api/
         environment:
             FLASK_ENV: development
+            POSTGRES_HOSTNAME: db
         depends_on:
             - "db"
         networks:
@@ -21,10 +22,16 @@ services:
         image: "postgres"
         container_name: "letters_db"
         restart: "always"
+        ports:
+            - "5432:5432"
         environment:
             POSTGRES_DB: words
             POSTGRES_USER: api
             POSTGRES_PASSWORD: letters
+            PGDATABASE: words  # pg vars are for psql
+            PGUSER: api
+            PGHOST: db
+            PGPASSWORD: letters
         volumes:
             - pgVolume:/var/lib/postgresql/data
         networks:

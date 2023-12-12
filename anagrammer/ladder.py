@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func, or_
 
 from anagrammer.database import engine
-from anagrammer.models import Ladder, WordScore
+from anagrammer.models import Ladder, WordLadderOptions, WordScore
 
 
 def word_pair_results_to_json(results):
@@ -68,32 +68,27 @@ def difficulty_class_to_range(difficulty_class):
     return upper, lower
 
 
-def search_ladders(
-    word_length: list[int] = None,
-    difficulty: list[int] = None,
-    ladder_filter: str = None,
-    page_size: int = 200,
-):
+def search_ladders(options: WordLadderOptions):
 
-    pair_lengths = (int(l) * 2 + 1 for l in word_length)
+    pair_lengths = (int(length) * 2 + 1 for length in options.length)
 
     with Session(engine) as session:
         query = session.query(Ladder)
 
-        if difficulty:
-            upper, lower = difficulty_class_to_range(difficulty_class=difficulty)
+        if options.difficulty:
+            upper, lower = difficulty_class_to_range(difficulty_class=options.difficulty)
             query = query.filter(Ladder.difficulty < upper).filter(
                 Ladder.difficulty > lower
             )
-        if word_length:
+        if options.length:
             query = query.filter(
                 or_(False, *[func.length(Ladder.pair) == p for p in pair_lengths])
             )
-        if ladder_filter:
-            query = query.filter(Ladder.pair.contains(ladder_filter))
+        if options.ladder_filter:
+            query = query.filter(Ladder.pair.contains(options.ladder_filter))
         results = (
             query.order_by(Ladder.difficulty, Ladder.hardest_word_score)
-            .limit(page_size)
+            .limit(options.page_size)
             .all()
         )
     return ladders_to_json(results)

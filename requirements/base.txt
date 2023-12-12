@@ -1,5 +1,8 @@
-Flask==3.0.0
+fastapi==0.104.1
 psycopg2-binary==2.9.3
-gunicorn[gevent]==20.1.0
+uvicorn==0.24.0.post1
 requests==2.31.0
-SQLAlchemy==1.4.31
+SQLAlchemy==2.0.23
+sqlmodel==0.0.14
+pydantic==2.5.2
+pydantic_core==2.14.5
