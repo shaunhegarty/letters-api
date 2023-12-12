@@ -5,18 +5,12 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Python: Flask",
+            "name": "Python: Pytest",
             "type": "python",
             "request": "launch",
-            "module": "flask",
-            "env": {
-                "FLASK_APP": "anagrammer",
-                "FLASK_DEBUG": "1"
-            },
+            "module": "pytest",
             "args": [
-                "run",
-                "--no-debugger",
-                "--no-reload"
+                "test/tests.py",
             ],
             "jinja": true,
             "justMyCode": true

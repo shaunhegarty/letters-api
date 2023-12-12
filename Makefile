@@ -20,3 +20,6 @@ psql:
 
 stop:
 	$(COMPOSE) down
+
+logs:
+	$(COMPOSE) logs -f web

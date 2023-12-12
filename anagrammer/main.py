@@ -1,22 +1,46 @@
 import logging
+from functools import cache
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from sqlalchemy.exc import ProgrammingError
+from sqlmodel import SQLModel, Session
 
 from anagrammer.models import WordLadderOptions
+from anagrammer.database import engine
 
 from . import dictionary, ladder
 
 logger = logging.getLogger(__name__)
 
 
-try:
-    d = dictionary.Dictionary()
-except ProgrammingError:
-    logger.warning("Database not set up")
+def get_session():
+    with Session(engine) as session:
+        yield session
 
 
-app = FastAPI()
+def create_db_and_tables():
+    SQLModel.metadata.create_all(engine)
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    create_db_and_tables()
+    get_dictionary()
+    yield
+
+
+app = FastAPI(lifespan=lifespan)
+
+
+@cache
+def get_dictionary():
+    try:
+        d = dictionary.Dictionary()
+    except ProgrammingError as e:
+        logger.exception(e)
+        logger.warning("\n------\nDatabase not set up\n------\n")
+    return d
 
 
 @app.get("/")
@@ -26,12 +50,14 @@ async def hello():
 
 @app.get("/anagrams/{word}")
 def get_anagrams(word):
+    d = get_dictionary()
     anagrams = d.get_anagrams(word)
     return anagrams
 
 
 @app.get("/subanagrams/{word}")
 def get_sub_anagrams(word: str, best_only: bool = False):
+    d = get_dictionary()
     anagrams = d.get_sub_anagrams(word)
     max_len = len(anagrams[0])  # longest first so this is the max
 
@@ -50,6 +76,7 @@ def get_sub_anagrams(word: str, best_only: bool = False):
 
 @app.get("/validate/{word}")
 def get_valid(word: str):
+    d = get_dictionary()
     return {
         "dictionary": "sowpods",
         "dictionary_size": d.get_dict_size(),
@@ -59,11 +86,13 @@ def get_valid(word: str):
 
 @app.get("/conundrum/{length}")
 def get(length: int):
+    d = get_dictionary()
     return d.get_conundrums(length)
 
 
 @app.get("/words/{length}")
 def words(length: int):
+    d = get_dictionary()
     return d.get_words_by_length(length)
 
 

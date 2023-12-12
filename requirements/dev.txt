@@ -4,3 +4,5 @@ pylint-flask==0.6
 black==22.1.0
 ipykernel==6.9.2
 ipython==8.10.0
+SQLAlchemy-Utils==0.41.1
+pytest==7.4.3

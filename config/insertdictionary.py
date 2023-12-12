@@ -3,14 +3,11 @@ import logging
 import json
 import requests
 
-from sqlalchemy.orm import Session
+from sqlmodel import Session
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy import func
 from anagrammer import models
 from anagrammer.database import engine
-
-models.Base.metadata.create_all(bind=engine)
-
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -18,14 +15,13 @@ handler = logging.StreamHandler(sys.stdout)
 logger.addHandler(handler)
 
 
-def setup_dictionaries():
-    with Session(engine) as session:
-        logger.info("Reading Common Words (with frequencies)")
-        with open(
+def load_common(session: Session, limit: int = 0):
+    with open(
             "dictionaries/common.frequency.csv", "r", encoding="utf-8"
         ) as dictionary:
             source = "wikipedia-word-frequency-list-2019"
             values = []
+            count = 0
             for line in dictionary:
                 word, frequency = line.split()
                 word = word.strip()
@@ -39,33 +35,50 @@ def setup_dictionaries():
                         "sorted_word": "".join(sorted(word.lower())),
                     }
                 )
+                count += 1
+                if limit != 0 and count >= limit:
+                    break
             statement = (
                 insert(models.Dictionary).values(values).on_conflict_do_nothing()
             )
             logger.info("Inserting Common Words (with frequencies) into database.")
-            session.execute(statement)
+            session.exec(statement)
             session.commit()
-            logger.info("Done.")
+
+
+def load_sowpods(session: Session, limit: int = 0):
+    with open("dictionaries/sowpods.txt", "r", encoding="utf-8") as dictionary:
+        values = []
+        count = 0
+        for word in dictionary:
+            word = word.strip()
+            values.append(
+                {
+                    "word": word,
+                    "word_length": len(word),
+                    "dictionary": "sowpods",
+                    "sorted_word": "".join(sorted(word.lower())),
+                }
+            )
+            count += 1
+            if limit != 0 and count >= limit:
+                break
+
+        logger.info("Inserting SOWPODS Words into database.")
+        statement = insert(models.Dictionary).values(values).on_conflict_do_nothing()
+        session.exec(statement)
+        session.commit()
+
+
+def setup_dictionaries():
+    with Session(engine) as session:
+        logger.info("Reading Common Words (with frequencies)")
+        load_common(session=session)
+        logger.info("Done.")
 
         logger.info("Reading SOWPODS dictionary")
-        with open("dictionaries/sowpods.txt", "r", encoding="utf-8") as dictionary:
-            values = []
-            for word in dictionary:
-                word = word.strip()
-                values.append(
-                    {
-                        "word": word,
-                        "word_length": len(word),
-                        "dictionary": "sowpods",
-                    }
-                )
-            statement = (
-                insert(models.Dictionary).values(values).on_conflict_do_nothing()
-            )
-            logger.info("Inserting SOWPODS Words into database.")
-            session.execute(statement)
-            session.commit()
-            logger.info("Done.")
+        load_sowpods(session=session)
+        logger.info("Done.")
 
 
 def get_ladder_json(word_length):
@@ -164,5 +177,6 @@ def setup_ladders():
     insert_word_ladders(word_scores=word_scores)
 
 
-setup_dictionaries()
-setup_ladders()
+if __name__ == "__main__":
+    setup_dictionaries()
+    setup_ladders()
