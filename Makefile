@@ -23,3 +23,6 @@ stop:
 
 logs:
 	$(COMPOSE) logs -f web
+
+test: build
+	$(COMPOSE) run --rm web python -m pytest test/tests.py
