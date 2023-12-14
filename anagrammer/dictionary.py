@@ -1,90 +1,82 @@
+from functools import cache
 from itertools import combinations
+from typing import Sequence
 
-from sqlalchemy import select
-from sqlalchemy.orm import Session
+from sqlalchemy import Row, select
+from sqlmodel import Session, func
 
-from anagrammer import models
-from anagrammer.database import engine
+from anagrammer.models import Dictionary
 
 
-class Dictionary:
+@cache
+def get_dict_size(dictionary: str, session: Session) -> int:
+    row: Sequence[Dictionary] = session.exec(
+        select(func.count(Dictionary.word).label("size")).where(
+            Dictionary.dictionary == dictionary
+        )
+    ).first()
+    return row.size
 
-    """This dictionary object will hold all of the words of dictionary in memory and provide some
-    useful operations to get the desired word"""
 
-    errorMessage = ""
+@cache
+def contains_word(word: str, session: Session) -> bool:
+    row: Sequence[Dictionary] = session.exec(
+        select(Dictionary)
+        .where(Dictionary.word == word)
+        .where(Dictionary.dictionary == "sowpods")
+    ).first()
+    return bool(row)
 
-    def __init__(self):
-        self.words = set()
-        self.words_by_length = {}
-        self.conundrums_by_length = (
-            {}
-        )  # i.e. words with precisely one valid configuration
-        self.words_by_anagram = {}
-        self.load_dictionary()
 
-    def load_dictionary(self):
-        with Session(engine) as session:
-            statement = select(models.Dictionary).where(
-                models.Dictionary.dictionary == "sowpods"
-            )
-            rows: list[models.Dictionary] = session.execute(statement).all()
-            for row in rows:
-                word = row.Dictionary.word
-                self.words.add(word)
-                # get lists for words of specific length
-                self.store_word_by_length(word)
-                self.store_anagram(word)
+@cache
+def get_anagrams(word: str, session: Session) -> list[str]:
+    sorted_word = "".join(sorted(word.lower()))
+    rows: Sequence[Dictionary] = session.exec(
+        select(Dictionary)
+        .where(Dictionary.sorted_word == sorted_word)
+        .where(Dictionary.dictionary == "sowpods")
+    ).all()
+    return [row.Dictionary.word for row in rows if row.Dictionary.word != word]
 
-    def store_anagram(self, word):
-        sorted_word = "".join(sorted(word.lower()))
-        anagram_list = self.words_by_anagram.get(sorted_word, [])
-        anagram_list.append(word)
-        self.words_by_anagram[sorted_word] = anagram_list
 
-    def store_word_by_length(self, word):
-        len_words = self.words_by_length.get(len(word), [])
-        len_words.append(word)
-        self.words_by_length[len(word)] = len_words
+@cache
+def get_sub_anagrams(word: str, session: Session) -> list[str]:
+    sorted_word: list[str] = sorted(word.lower())
 
-    def get_words_by_length(self, length):
-        return self.words_by_length.get(length, [])
+    subsets: list[str] = []
 
-    def get_conundrums(self, length):
-        conundrums = self.conundrums_by_length.get(length, [])
-        if len(conundrums) == 0:
-            words_of_length = self.words_by_length.get(length, [])
-            for _, word in enumerate(words_of_length):
-                word_anagrams = self.get_anagrams(word)
-                if not word_anagrams:
-                    conundrums.append(word)
-            self.conundrums_by_length[length] = conundrums
-        return conundrums
+    for i in range(2, len(sorted_word) + 1):
+        for subset in combinations(sorted_word, i):
+            subsets.append("".join(subset))
 
-    def get_error_output(self):
-        return self.errorMessage
+    rows: Sequence[Row] = session.exec(
+        select(Dictionary)
+        .where(Dictionary.sorted_word.in_(subsets))
+        .where(Dictionary.dictionary == "sowpods")
+    ).all()
+    sub_anagrams: list[str] = [
+        row.Dictionary.word for row in rows if row.Dictionary.word != word
+    ]
+    return sub_anagrams
 
-    def get_dict_size(self):
-        return len(self.words)
 
-    def contains_word(self, word):
-        return word in self.words
+@cache
+def get_conundrums(length: int, session: Session) -> list[str]:
+    rows: Sequence[Row] = session.exec(
+        select(func.string_agg(Dictionary.word, ",").label("word"))
+        .where(Dictionary.word_length == length)
+        .where(Dictionary.dictionary == "sowpods")
+        .group_by(Dictionary.sorted_word)
+        .having(func.count(Dictionary.sorted_word) == 1)
+    ).all()
+    return [row.word for row in rows]
 
-    def get_anagrams(self, input_word):
-        input_word = input_word.lower()
-        sorted_word = "".join(sorted(input_word))
-        anagrams = self.words_by_anagram.get(sorted_word, set())
-        return [word for word in anagrams if word != input_word]
 
-    def get_sub_anagrams(self, original):
-        anagrams = set()
-        sorted_word = sorted(original.lower())
-
-        for i in range(2, len(sorted_word) + 1):
-            for subset in combinations(sorted_word, i):
-                subset_word = "".join(subset)
-                subset_anagrams = self.words_by_anagram.get(subset_word, [])
-                anagrams.update(subset_anagrams)
-
-        anagrams = sorted(anagrams, key=len, reverse=True)
-        return anagrams
+@cache
+def get_words_by_length(length: int, session: Session):
+    rows: Sequence[Dictionary] = session.exec(
+        select(Dictionary)
+        .where(Dictionary.word_length == length)
+        .where(Dictionary.dictionary == "sowpods")
+    ).all()
+    return [row.Dictionary.word for row in rows]

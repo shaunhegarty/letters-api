@@ -5,6 +5,18 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Python: FastAPI",
+            "type": "python",
+            "request": "launch",
+            "module": "uvicorn",
+            "args": [
+                "anagrammer.main:app",
+                "--reload"
+            ],
+            "jinja": true,
+            "justMyCode": true
+        },
+        {
             "name": "Python: Pytest",
             "type": "python",
             "request": "launch",
