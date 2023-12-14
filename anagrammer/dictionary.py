@@ -1,5 +1,4 @@
 from itertools import combinations
-from typing import Sequence
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -89,11 +88,3 @@ class Dictionary:
 
         anagrams = sorted(anagrams, key=len, reverse=True)
         return anagrams
-
-
-def get_anagram(word: str, session: Session):
-    sorted_word = "".join(sorted(word.lower()))
-    rows: Sequence[models.Dictionary] = session.exec(
-        select(models.Dictionary).where(models.Dictionary.sorted_word == sorted_word)
-    ).all()
-    return [row.word for row in rows if row.word != word]

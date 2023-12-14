@@ -1,13 +1,14 @@
 import logging
-from functools import cache
 from contextlib import asynccontextmanager
+from functools import cache
+from typing import Sequence
 
 from fastapi import Depends, FastAPI
 from sqlalchemy.exc import ProgrammingError
-from sqlmodel import SQLModel, Session
+from sqlmodel import Session, SQLModel, select
 
-from anagrammer.models import WordLadderOptions
 from anagrammer.database import engine
+from anagrammer.models import WordLadderOptions, Dictionary
 
 from . import dictionary, ladder
 
@@ -49,10 +50,13 @@ async def hello():
 
 
 @app.get("/anagrams/{word}")
-def get_anagrams(word):
-    d = get_dictionary()
-    anagrams = d.get_anagrams(word)
-    return anagrams
+def get_anagrams(word: str, session: Session = Depends(get_session)):
+    sorted_word = "".join(sorted(word.lower()))
+    rows: Sequence[Dictionary] = session.exec(
+        select(Dictionary).where(Dictionary.sorted_word == sorted_word)
+    ).all()
+    return [row.word for row in rows if row.word != word]
+    
 
 
 @app.get("/subanagrams/{word}")
