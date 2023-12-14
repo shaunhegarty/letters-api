@@ -18,6 +18,10 @@ db_only:
 psql: 
 	$(COMPOSE) run --rm db psql
 
+setup: build
+	$(COMPOSE) run --rm db dropdb --if-exists 'words'
+	$(COMPOSE) run --rm web python -m config.insertdictionary
+
 stop:
 	$(COMPOSE) down
 

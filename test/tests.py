@@ -11,7 +11,8 @@ from anagrammer.ladder import (
     get_easy_ladders_by_word_length,
     get_ladders_by_length_and_difficulty,
 )
-from anagrammer.models import Dictionary, Ladder
+from anagrammer.models import Dictionary, Ladder, WordScore
+from config import insertdictionary
 from config.insertdictionary import insert_word_ladder, load_common, load_sowpods
 
 POSTGRES_HOSTNAME = os.environ.get("POSTGRES_HOSTNAME", "localhost")
@@ -124,6 +125,25 @@ def test_search_ladders(session: Session):
     assert True is any(r["pair"] == "came-will" for r in results["ladders"])
 
 
+def test_word_scores(session: Session):
+    load_common(session, limit=1000)
+    word_scores = insertdictionary.get_word_scores(session=session)
+    assert word_scores["wing"] == 1000
+
+
+def test_populate_word_scores(session: Session):
+    load_common(session, limit=1000)
+    word_scores = insertdictionary.get_word_scores(session=session)
+    insertdictionary.insert_word_scores(session=session, word_scores=word_scores)
+
+    word_score: WordScore = session.exec(
+        select(WordScore)
+        .where(WordScore.score == 1000)
+        .where(WordScore.dictionary == "common")
+    ).first()
+    assert word_score.word == "wing"
+
+
 def setup_ladders(session: Session):
     data: dict[str, list[list[str]]] = json.load(
         open("test/ladders.json", "r", encoding="utf-8")
@@ -165,7 +185,3 @@ def setup_ladders(session: Session):
 #                 d["pair"]: d for d in json.loads(response.data).get("ladders", [])
 #             }
 #             self.assertTrue(len(parsed_data.keys()) == 23)
-
-
-# if __name__ == "__main__":
-#     unittest.main()

@@ -1,11 +1,13 @@
-import sys
-import logging
 import json
-import requests
+import logging
+import sys
 
-from sqlmodel import Session, select, col
-from sqlalchemy.dialects.postgresql import insert
+import requests
 from sqlalchemy import func
+from sqlalchemy.dialects.postgresql import insert
+from sqlalchemy_utils import create_database, database_exists
+from sqlmodel import Session, SQLModel, col, select
+
 from anagrammer import models
 from anagrammer.database import engine
 
@@ -16,16 +18,6 @@ logger.addHandler(handler)
 
 
 def load_common(session: Session, limit: int = 0) -> None:
-    insert(models.Dictionary).values(
-        {
-            "word": "the",
-            "frequency": 22038615,
-            "word_length": 3,
-            "dictionary": "common",
-            "source": "wikipedia-word-frequency-list-2019",
-            "sorted_word": "eht",
-        }
-    )
     with open("dictionaries/common.frequency.csv", "r", encoding="utf-8") as dictionary:
         source = "wikipedia-word-frequency-list-2019"
         values = []
@@ -105,7 +97,7 @@ def sort_word_pair(pair) -> str:
     return "-".join(sorted(pair.split("-")))
 
 
-def ladder_difficulty(ladder, word_scores: dict[str, int]) -> int:
+def ladder_difficulty(ladder: Ladder, word_scores: dict[str, int]) -> int:
     word_score = 0
     for word in ladder:
         word_score += word_scores[word]
@@ -113,37 +105,35 @@ def ladder_difficulty(ladder, word_scores: dict[str, int]) -> int:
 
 
 def get_hardest_word(ladder: Ladder, word_scores: dict[str, int]) -> tuple[str, int]:
-    hardest_word_score = 0
-    hardest_word = ""
+    hardest_word_score: int = 0
+    hardest_word: str = ""
     for word in ladder:
-        word_score = word_scores[word]
+        word_score = word_scores.get(word, 0)
         if word_score > hardest_word_score:
             hardest_word_score = word_score
             hardest_word = word
     return hardest_word, hardest_word_score
 
 
-def get_word_scores() -> dict[str, int]:
-    with Session(engine) as session:
-        results = session.exec(
-            select(
-                models.Dictionary,
-                func.rank().over(order_by=col(models.Dictionary.frequency).desc()),
-            ).where(models.Dictionary.dictionary == "common")
-        ).all()
-        word_scores = {word.word: rank for word, rank in results}
+def get_word_scores(session: Session) -> dict[str, int]:
+    results = session.exec(
+        select(
+            models.Dictionary,
+            func.rank().over(order_by=col(models.Dictionary.frequency).desc()),
+        ).where(models.Dictionary.dictionary == "common")
+    ).all()
+    word_scores = {word.word: rank for word, rank in results}
     return word_scores
 
 
-def insert_word_scores(word_scores: dict[str, int]) -> None:
-    with Session(engine) as session:
-        # Populate Word Score
-        values = []
-        for word, word_score in word_scores.items():
-            values.append({"word": word, "dictionary": "common", "score": word_score})
-        statement = insert(models.WordScore).values(values).on_conflict_do_nothing()
-        session.exec(statement)  # type: ignore
-        session.commit()
+def insert_word_scores(session: Session, word_scores: dict[str, int]) -> None:
+    # Populate Word Score
+    values = []
+    for word, word_score in word_scores.items():
+        values.append({"word": word, "dictionary": "common", "score": word_score})
+    statement = insert(models.WordScore).values(values).on_conflict_do_nothing()
+    session.exec(statement)  # type: ignore
+    session.commit()
 
 
 def insert_word_ladder(
@@ -175,21 +165,24 @@ def insert_word_ladder(
     session.commit()
 
 
-def insert_word_ladders(word_scores: dict[str, int]) -> None:
+def insert_word_ladders(session: Session, word_scores: dict[str, int]) -> None:
     for word_length in range(3, 7):
         logger.info("Adding %s-letter word ladders", word_length)
         data: dict[str, LadderSet] = get_ladder_json(word_length=word_length)
-        with Session(engine) as session:
-            insert_word_ladder(data=data, word_scores=word_scores, session=session)
+        insert_word_ladder(data=data, word_scores=word_scores, session=session)
     logger.info("Done.")
 
 
 def setup_ladders() -> None:
-    word_scores: dict[str, int] = get_word_scores()
-    insert_word_scores(word_scores=word_scores)
-    insert_word_ladders(word_scores=word_scores)
+    with Session(engine) as session:
+        word_scores: dict[str, int] = get_word_scores(session=session)
+        insert_word_scores(session=session, word_scores=word_scores)
+        insert_word_ladders(session=session, word_scores=word_scores)
 
 
 if __name__ == "__main__":
+    if not database_exists(engine.url):
+        create_database(engine.url)
+        SQLModel.metadata.create_all(engine)
     setup_dictionaries()
     setup_ladders()
