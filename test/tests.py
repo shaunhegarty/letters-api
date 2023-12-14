@@ -6,6 +6,7 @@ from sqlalchemy import select
 from sqlalchemy_utils import create_database, database_exists
 from sqlmodel import Session, SQLModel, create_engine
 
+from anagrammer.dictionary import get_anagram
 from anagrammer.ladder import (
     get_easy_ladders_by_word_length,
     get_ladders_by_length_and_difficulty,
@@ -54,6 +55,12 @@ def test_create_word(session: Session):
     assert row.Dictionary.word == "the"
 
 
+def test_get_anagrams(session: Session):
+    load_sowpods(session, limit=1000)
+    anagrams = get_anagram(word="aboard", session=session)
+    assert "abroad" in anagrams
+
+
 def test_create_ladder(session: Session):
     data: dict[str, list[list[str]]] = json.load(
         open("test/ladders.json", "r", encoding="utf-8")
@@ -69,7 +76,6 @@ def test_create_ladder(session: Session):
     # build up a dummy word_scores dict
     word_scores: dict[str, int] = {word: 1 for word in words}
 
-
     # insert the test data
     insert_word_ladder(data=data, word_scores=word_scores, session=session)
 
@@ -80,10 +86,9 @@ def test_create_ladder(session: Session):
     )
     ladder1: Ladder = results[0]
     assert ladder1.pair == "came-will"
-    
+
     results = get_easy_ladders_by_word_length(word_length=4, session=session)
-    print(results)
-    assert False
+    assert True is any(r["pair"] == "like-went" for r in results["ladders"])
 
 
 # class TestLadderSearch(unittest.TestCase):
