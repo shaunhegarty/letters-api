@@ -2,25 +2,24 @@ from functools import cache
 from itertools import combinations
 from typing import Sequence
 
-from sqlalchemy import Row, select
-from sqlmodel import Session, func
+from sqlmodel import Session, func, select
 
 from anagrammer.models import Dictionary
 
 
 @cache
 def get_dict_size(dictionary: str, session: Session) -> int:
-    row: Sequence[Dictionary] = session.exec(
+    size: int | None = session.exec(
         select(func.count(Dictionary.word).label("size")).where(
             Dictionary.dictionary == dictionary
         )
     ).first()
-    return row.size
+    return size or 0
 
 
 @cache
 def contains_word(word: str, session: Session) -> bool:
-    row: Sequence[Dictionary] = session.exec(
+    row: Dictionary | None = session.exec(
         select(Dictionary)
         .where(Dictionary.word == word)
         .where(Dictionary.dictionary == "sowpods")
@@ -36,7 +35,7 @@ def get_anagrams(word: str, session: Session) -> list[str]:
         .where(Dictionary.sorted_word == sorted_word)
         .where(Dictionary.dictionary == "sowpods")
     ).all()
-    return [row.Dictionary.word for row in rows if row.Dictionary.word != word]
+    return [row.word for row in rows if row.word != word]
 
 
 @cache
@@ -49,34 +48,32 @@ def get_sub_anagrams(word: str, session: Session) -> list[str]:
         for subset in combinations(sorted_word, i):
             subsets.append("".join(subset))
 
-    rows: Sequence[Row] = session.exec(
+    rows: Sequence[Dictionary] = session.exec(
         select(Dictionary)
-        .where(Dictionary.sorted_word.in_(subsets))
+        .where(Dictionary.sorted_word.in_(subsets))  # type: ignore
         .where(Dictionary.dictionary == "sowpods")
     ).all()
-    sub_anagrams: list[str] = [
-        row.Dictionary.word for row in rows if row.Dictionary.word != word
-    ]
+    sub_anagrams: list[str] = [row.word for row in rows if row.word != word]
     return sub_anagrams
 
 
 @cache
 def get_conundrums(length: int, session: Session) -> list[str]:
-    rows: Sequence[Row] = session.exec(
+    rows: Sequence[str] = session.exec(
         select(func.string_agg(Dictionary.word, ",").label("word"))
         .where(Dictionary.word_length == length)
         .where(Dictionary.dictionary == "sowpods")
         .group_by(Dictionary.sorted_word)
         .having(func.count(Dictionary.sorted_word) == 1)
     ).all()
-    return [row.word for row in rows]
+    return [word for word in rows]
 
 
 @cache
-def get_words_by_length(length: int, session: Session):
+def get_words_by_length(length: int, session: Session) -> list[str]:
     rows: Sequence[Dictionary] = session.exec(
         select(Dictionary)
         .where(Dictionary.word_length == length)
         .where(Dictionary.dictionary == "sowpods")
     ).all()
-    return [row.Dictionary.word for row in rows]
+    return [row.word for row in rows]

@@ -118,8 +118,10 @@ def word_scores(
 
 
 @app.get("/ladders/random/{difficulty_class}/{length}")
-def random_ladder(difficulty_class: int, length: int):
+def random_ladder(
+    difficulty_class: int, length: int, session: Session = Depends(get_session)
+):
     upper, lower = difficulty_class * 10000, (difficulty_class - 1) * 10000
     return ladder.get_random_ladder_in_difficulty_range(
-        word_length=length, upper_bound=upper, lower_bound=lower
+        session=session, word_length=length, upper_bound=upper, lower_bound=lower
     )

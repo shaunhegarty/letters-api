@@ -1,8 +1,7 @@
 import random
 from typing import Any, Sequence
 
-from sqlalchemy import func, or_
-from sqlmodel import Session, select
+from sqlmodel import Session, func, or_, select, col
 
 from anagrammer.models import Ladder, WordLadderOptions, WordScore
 
@@ -44,8 +43,8 @@ def ladders_to_json(results: Sequence[Ladder]) -> LadderJSON:
 def get_word_ladder_for_word_pair(word_pair: str, session: Session) -> dict[str, Any]:
     results: Sequence[Ladder] = session.exec(
         select(Ladder)
-        .filter(Ladder.pair == word_pair)
-        .order_by(Ladder.hardest_word_score)
+        .where(Ladder.pair == word_pair)
+        .order_by(col(Ladder.hardest_word_score))
     ).all()
     return word_pair_results_to_json(results)
 
@@ -55,10 +54,10 @@ def get_ladders_by_length_and_difficulty(
 ) -> Sequence[Ladder]:
     results: Sequence[Ladder] = session.exec(
         select(Ladder)
-        .filter(func.length(Ladder.pair) == word_length * 2 + 1)
-        .filter(Ladder.difficulty < upper_bound)
-        .filter(Ladder.difficulty > lower_bound)
-        .order_by(Ladder.difficulty, Ladder.hardest_word_score, Ladder.pair)
+        .where(func.length(Ladder.pair) == word_length * 2 + 1)
+        .where(col(Ladder.difficulty) < upper_bound)
+        .where(col(Ladder.difficulty) > lower_bound)
+        .order_by(col(Ladder.difficulty), col(Ladder.hardest_word_score), Ladder.pair)
     ).all()
     return results
 
@@ -76,17 +75,17 @@ def search_ladders(options: WordLadderOptions, session: Session) -> LadderJSON:
 
     if options.difficulty:
         upper, lower = difficulty_class_to_range(difficulty_class=options.difficulty)
-        query = query.filter(Ladder.difficulty < upper).filter(
-            Ladder.difficulty > lower
+        query = query.filter(col(Ladder.difficulty) < upper).filter(
+            col(Ladder.difficulty) > lower
         )
     if options.length:
         query = query.filter(
             or_(False, *[func.length(Ladder.pair) == p for p in pair_lengths])
         )
     if options.ladder_filter:
-        query = query.filter(Ladder.pair.contains(options.ladder_filter))
+        query = query.filter(col(Ladder.pair).contains(options.ladder_filter))
     results = session.exec(
-        query.order_by(Ladder.difficulty, Ladder.hardest_word_score).limit(
+        query.order_by(col(Ladder.difficulty), col(Ladder.hardest_word_score)).limit(
             options.page_size
         )
     ).all()
@@ -107,9 +106,9 @@ def get_easy_ladders_by_word_length(session: Session, word_length: int) -> Ladde
     results = session.exec(
         select(Ladder)
         .filter(func.length(Ladder.pair) == word_length * 2 + 1)
-        .filter(Ladder.difficulty < 10000)
-        .filter(Ladder.difficulty > 0)
-        .order_by(Ladder.difficulty, Ladder.hardest_word_score)
+        .filter(col(Ladder.difficulty) < 10000)
+        .filter(col(Ladder.difficulty) > 0)
+        .order_by(col(Ladder.difficulty), col(Ladder.hardest_word_score))
     ).all()
     return ladders_to_json(results)
 
@@ -120,17 +119,20 @@ def get_words_and_scores(
     results = session.exec(
         select(WordScore)
         .filter(func.length(WordScore.word) == word_length)
-        .filter(WordScore.dictionary == word_dictionary)
+        .filter(col(WordScore.dictionary) == word_dictionary)
         .order_by(WordScore.word)
     ).all()
     return {word_score.word: word_score.score for word_score in results}
 
 
 def get_random_ladder_in_difficulty_range(
-    word_length, upper_bound, lower_bound=0
+    session: Session, word_length: int, upper_bound: int, lower_bound: int = 0
 ) -> dict[str, Any]:
     results = get_ladders_by_length_and_difficulty(
-        word_length=word_length, upper_bound=upper_bound, lower_bound=lower_bound
+        session=session,
+        word_length=word_length,
+        upper_bound=upper_bound,
+        lower_bound=lower_bound,
     )
     rand = random.SystemRandom().randint(0, len(results))
     return word_pair_results_to_json([list(results)[rand]])

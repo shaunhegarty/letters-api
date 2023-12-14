@@ -2,9 +2,8 @@ import json
 import os
 
 import pytest
-from sqlalchemy import select
 from sqlalchemy_utils import create_database, database_exists
-from sqlmodel import Session, SQLModel, create_engine
+from sqlmodel import Session, SQLModel, create_engine, select
 
 from anagrammer import dictionary, ladder
 from anagrammer.dictionary import get_anagrams, get_conundrums, get_sub_anagrams
@@ -45,7 +44,8 @@ def test_create_word(session: Session):
         .where(Dictionary.word == "aardvark")
         .where(Dictionary.dictionary == "sowpods")
     ).first()
-    assert row.Dictionary.word == "aardvark"
+    assert row is not None
+    assert row.word == "aardvark"
 
     load_common(session, limit=10)
     row = session.exec(
@@ -53,7 +53,8 @@ def test_create_word(session: Session):
         .where(Dictionary.word == "the")
         .where(Dictionary.dictionary == "common")
     ).first()
-    assert row.Dictionary.word == "the"
+    assert row is not None
+    assert row.word == "the"
 
 
 def test_get_anagrams(session: Session):
@@ -102,8 +103,8 @@ def test_create_ladder(session: Session):
     ladder1: Ladder = results[0]
     assert ladder1.pair == "came-will"
 
-    results = get_easy_ladders_by_word_length(word_length=4, session=session)
-    assert True is any(r["pair"] == "like-went" for r in results["ladders"])
+    results_2 = get_easy_ladders_by_word_length(word_length=4, session=session)
+    assert True is any(r["pair"] == "like-went" for r in results_2["ladders"])
 
 
 def test_get_ladder(session: Session):
