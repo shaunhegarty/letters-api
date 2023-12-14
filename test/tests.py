@@ -6,7 +6,8 @@ from sqlalchemy import select
 from sqlalchemy_utils import create_database, database_exists
 from sqlmodel import Session, SQLModel, create_engine
 
-from anagrammer.dictionary import get_anagrams, get_sub_anagrams
+from anagrammer import dictionary
+from anagrammer.dictionary import get_anagrams, get_sub_anagrams, get_conundrums
 from anagrammer.ladder import (
     get_easy_ladders_by_word_length,
     get_ladders_by_length_and_difficulty,
@@ -67,6 +68,28 @@ def test_get_sub_anagrams(session: Session):
     assert "abroad" in anagrams
     assert "abord" in anagrams
     assert "aa"
+
+
+def test_get_conundrums(session: Session):
+    load_sowpods(session, limit=1000)
+    conundrums = get_conundrums(length=6, session=session)
+    assert "abacus" in conundrums
+
+
+def test_dict_size(session: Session):
+    load_sowpods(session, limit=1000)
+    assert 1000 == dictionary.get_dict_size(dictionary="sowpods", session=session)
+
+
+def test_contains_word(session: Session):
+    load_sowpods(session, limit=1000)
+    assert True is dictionary.contains_word(word="aboard", session=session)
+
+
+def test_get_words_by_length(session: Session):
+    load_sowpods(session, limit=1000)
+    words_of_length = dictionary.get_words_by_length(length=6, session=session)
+    assert "aboard" in words_of_length
 
 
 def test_create_ladder(session: Session):

@@ -1,10 +1,8 @@
 import logging
 from contextlib import asynccontextmanager
-from functools import cache
 from typing import Any
 
 from fastapi import Depends, FastAPI
-from sqlalchemy.exc import ProgrammingError
 from sqlmodel import Session, SQLModel
 
 from anagrammer.database import engine
@@ -27,21 +25,10 @@ def create_db_and_tables():
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     create_db_and_tables()
-    get_dictionary()
     yield
 
 
 app = FastAPI(lifespan=lifespan)
-
-
-@cache
-def get_dictionary():
-    try:
-        d = dictionary.Dictionary()
-    except ProgrammingError as e:
-        logger.exception(e)
-        logger.warning("\n------\nDatabase not set up\n------\n")
-    return d
 
 
 @app.get("/")
@@ -51,18 +38,15 @@ async def hello():
 
 @app.get("/anagrams/{word}")
 def get_anagrams(word: str, session: Session = Depends(get_session)):
-    from anagrammer.dictionary import get_anagrams
-
-    return get_anagrams(word, session)
+    return dictionary.get_anagrams(word, session)
 
 
 @app.get("/subanagrams/{word}")
 def get_sub_anagrams(
     word: str, best_only: bool = False, session: Session = Depends(get_session)
 ) -> dict[str, Any]:
-    from anagrammer.dictionary import get_sub_anagrams
 
-    anagrams: list[str] = get_sub_anagrams(word, session)
+    anagrams: list[str] = dictionary.get_sub_anagrams(word, session)
     anagrams = sorted(anagrams, key=len, reverse=True)
     max_len = len(anagrams[0])  # longest first so this is the max
 
@@ -80,25 +64,23 @@ def get_sub_anagrams(
 
 
 @app.get("/validate/{word}")
-def get_valid(word: str):
-    d = get_dictionary()
+def get_valid(word: str, session: Session = Depends(get_session)):
+    dict_name = "sowpods"
     return {
-        "dictionary": "sowpods",
-        "dictionary_size": d.get_dict_size(),
-        "valid": d.contains_word(word),
+        "dictionary": dict_name,
+        "dictionary_size": dictionary.get_dict_size(dict_name, session),
+        "valid": dictionary.contains_word(word, session),
     }
 
 
 @app.get("/conundrum/{length}")
-def get(length: int):
-    d = get_dictionary()
-    return d.get_conundrums(length)
+def get(length: int, session: Session = Depends(get_session)):
+    return dictionary.get_conundrums(length, session)
 
 
 @app.get("/words/{length}")
-def words(length: int):
-    d = get_dictionary()
-    return d.get_words_by_length(length)
+def words(length: int, session: Session = Depends(get_session)):
+    return dictionary.get_words_by_length(length, session)
 
 
 @app.get("/ladders/{word_length:int}")
