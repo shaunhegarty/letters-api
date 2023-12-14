@@ -45,7 +45,6 @@ def get_anagrams(word: str, session: Session = Depends(get_session)):
 def get_sub_anagrams(
     word: str, best_only: bool = False, session: Session = Depends(get_session)
 ) -> dict[str, Any]:
-
     anagrams: list[str] = dictionary.get_sub_anagrams(word, session)
     anagrams = sorted(anagrams, key=len, reverse=True)
     max_len = len(anagrams[0])  # longest first so this is the max
@@ -89,8 +88,8 @@ def word_ladders_by_length(word_length: int, session: Session = Depends(get_sess
 
 
 @app.get("/ladders/{word_pair:str}")
-def word_ladder(word_pair: str):
-    return ladder.get_word_ladder_for_word_pair(word_pair)
+def word_ladder(word_pair: str, session: Session = Depends(get_session)):
+    return ladder.get_word_ladder_for_word_pair(word_pair, session)
 
 
 @app.get("/ladders/{difficulty_class}/{word_length}")
@@ -103,13 +102,19 @@ def word_ladders_by_difficulty_and_length(
 
 
 @app.post("/ladders/search/")
-def word_ladder_from_options(options: WordLadderOptions):
-    return ladder.search_ladders(options)
+def word_ladder_from_options(
+    options: WordLadderOptions, session: Session = Depends(get_session)
+):
+    return ladder.search_ladders(options, session)
 
 
 @app.get("/ladders/words/{word_dictionary}/{length}")
-def word_scores(word_dictionary, length):
-    return ladder.get_words_and_scores(word_dictionary, word_length=length)
+def word_scores(
+    word_dictionary: str, length: int, session: Session = Depends(get_session)
+):
+    return ladder.get_words_and_scores(
+        word_dictionary, word_length=length, session=session
+    )
 
 
 @app.get("/ladders/random/{difficulty_class}/{length}")

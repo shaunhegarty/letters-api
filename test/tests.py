@@ -6,8 +6,8 @@ from sqlalchemy import select
 from sqlalchemy_utils import create_database, database_exists
 from sqlmodel import Session, SQLModel, create_engine
 
-from anagrammer import dictionary
-from anagrammer.dictionary import get_anagrams, get_sub_anagrams, get_conundrums
+from anagrammer import dictionary, ladder
+from anagrammer.dictionary import get_anagrams, get_conundrums, get_sub_anagrams
 from anagrammer.ladder import (
     get_easy_ladders_by_word_length,
     get_ladders_by_length_and_difficulty,
@@ -93,23 +93,7 @@ def test_get_words_by_length(session: Session):
 
 
 def test_create_ladder(session: Session):
-    data: dict[str, list[list[str]]] = json.load(
-        open("test/ladders.json", "r", encoding="utf-8")
-    )
-
-    # get all the words
-    words = set()
-    for _, ladders in data.items():
-        for ladder in ladders:
-            for word in ladder:
-                words.add(word)
-
-    # build up a dummy word_scores dict
-    word_scores: dict[str, int] = {word: 1 for word in words}
-
-    # insert the test data
-    insert_word_ladder(data=data, word_scores=word_scores, session=session)
-
+    setup_ladders(session)
     # go looking for it
 
     results = get_ladders_by_length_and_difficulty(
@@ -120,6 +104,42 @@ def test_create_ladder(session: Session):
 
     results = get_easy_ladders_by_word_length(word_length=4, session=session)
     assert True is any(r["pair"] == "like-went" for r in results["ladders"])
+
+
+def test_get_ladder(session: Session):
+    setup_ladders(session)
+    pair_ladder = ladder.get_word_ladder_for_word_pair(
+        word_pair="came-will", session=session
+    )
+    assert pair_ladder["ladder"]["chain"][0] == "came,wame,wale,wall,will"
+
+
+def test_search_ladders(session: Session):
+    setup_ladders(session)
+    options = ladder.WordLadderOptions(
+        difficulty=[1, 2], length=[4], ladder_filter="wil"
+    )
+    results = ladder.search_ladders(options=options, session=session)
+    assert True is any(r["pair"] == "came-will" for r in results["ladders"])
+
+
+def setup_ladders(session: Session):
+    data: dict[str, list[list[str]]] = json.load(
+        open("test/ladders.json", "r", encoding="utf-8")
+    )
+
+    # get all the words
+    words = set()
+    for _, ladders in data.items():
+        for lad in ladders:
+            for word in lad:
+                words.add(word)
+
+    # build up a dummy word_scores dict
+    word_scores: dict[str, int] = {word: 1 for word in words}
+
+    # insert the test data
+    insert_word_ladder(data=data, word_scores=word_scores, session=session)
 
 
 # class TestLadderSearch(unittest.TestCase):

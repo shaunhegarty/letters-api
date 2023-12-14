@@ -27,13 +27,11 @@ class WordScore(SQLModel, table=True):
 
 
 class Ladder(SQLModel, table=True):
-    __tablename__ = "ladder"
-
     pair: str = Field(primary_key=True)
     dictionary: str = Field(primary_key=True)
     variant: int = Field(primary_key=True)
     chain: str
-    length: int 
+    length: int
     difficulty: Optional[int]
     hardest_word_score: Optional[int]
     hardest_word: Optional[str]
@@ -46,6 +44,7 @@ class Ladder(SQLModel, table=True):
         variations_string = f"{self.variant} of {self.variations}."
         difficulty_string = f"Difficulty: {self.difficulty}."
         return f"{self.pair}: [{self.chain}]. {variations_string} {difficulty_string}"
+
 
 class WordLadderOptions(SQLModel):
     ladder_filter: Optional[str]
