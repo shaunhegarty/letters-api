@@ -1,7 +1,7 @@
 # Define variables
-COMPOSE := docker-compose -f docker-compose.dev.yml
+COMPOSE := docker compose -f docker-compose.dev.yml
 
-.PHONY: build run run_dev db_only psql stop logs
+.PHONY: build run run_dev db_only psql stop logs mypy test check_db
 
 build:
 	$(COMPOSE) build
@@ -9,7 +9,7 @@ build:
 run: build
 	$(COMPOSE) up -d
 
-run_dev:
+dev: .venv
 	./startdev
 
 db_only: 
@@ -24,5 +24,20 @@ stop:
 logs:
 	$(COMPOSE) logs -f web
 
-test: build
-	$(COMPOSE) run --rm web python -m pytest test/tests.py
+test: .venv
+	. .venv/bin/activate; python -m pytest test/tests.py
+
+mypy: build
+	$(COMPOSE) run --rm web mypy --config-file .mypy.ini .
+
+.venv: .venv/touchfile
+
+.venv/touchfile: requirements/dev.txt requirements/base.txt
+	python3.11 -m venv .venv
+	.venv/bin/pip install -r requirements/dev.txt
+	touch .venv/touchfile
+
+env: .venv
+
+
+	
