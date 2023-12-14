@@ -1,7 +1,9 @@
 from itertools import combinations
+from typing import Sequence
 
-from sqlalchemy import select
-from sqlalchemy.orm import Session
+from sqlalchemy import Row, select
+from sqlmodel import Session
+
 
 from anagrammer import models
 from anagrammer.database import engine
@@ -17,9 +19,7 @@ class Dictionary:
     def __init__(self):
         self.words = set()
         self.words_by_length = {}
-        self.conundrums_by_length = (
-            {}
-        )  # i.e. words with precisely one valid configuration
+        self.conundrums_by_length = {}  # i.e. words with precisely one valid configuration
         self.words_by_anagram = {}
         self.load_dictionary()
 
@@ -88,3 +88,33 @@ class Dictionary:
 
         anagrams = sorted(anagrams, key=len, reverse=True)
         return anagrams
+
+
+def get_anagrams(word: str, session: Session) -> list[str]:
+    sorted_word = "".join(sorted(word.lower()))
+    rows: Sequence[models.Dictionary] = session.exec(
+        select(models.Dictionary)
+        .where(models.Dictionary.sorted_word == sorted_word)
+        .where(models.Dictionary.dictionary == "sowpods")
+    ).all()
+    return [row.Dictionary.word for row in rows if row.Dictionary.word != word]
+
+
+def get_sub_anagrams(word: str, session: Session) -> list[str]:
+    sorted_word: list[str] = sorted(word.lower())
+
+    subsets: list[str] = []
+
+    for i in range(2, len(sorted_word) + 1):
+        for subset in combinations(sorted_word, i):
+            subsets.append("".join(subset))
+
+    rows: Sequence[Row] = session.exec(
+        select(models.Dictionary)
+        .where(models.Dictionary.sorted_word.in_(subsets))
+        .where(models.Dictionary.dictionary == "sowpods")
+    ).all()
+    sub_anagrams: list[str] = [
+        row.Dictionary.word for row in rows if row.Dictionary.word != word
+    ]
+    return sub_anagrams

@@ -1,14 +1,14 @@
 import logging
 from contextlib import asynccontextmanager
 from functools import cache
-from typing import Sequence
+from typing import Any
 
 from fastapi import Depends, FastAPI
 from sqlalchemy.exc import ProgrammingError
-from sqlmodel import Session, SQLModel, select
+from sqlmodel import Session, SQLModel
 
 from anagrammer.database import engine
-from anagrammer.models import WordLadderOptions, Dictionary
+from anagrammer.models import WordLadderOptions
 
 from . import dictionary, ladder
 
@@ -51,26 +51,27 @@ async def hello():
 
 @app.get("/anagrams/{word}")
 def get_anagrams(word: str, session: Session = Depends(get_session)):
-    sorted_word = "".join(sorted(word.lower()))
-    rows: Sequence[Dictionary] = session.exec(
-        select(Dictionary).where(Dictionary.sorted_word == sorted_word)
-    ).all()
-    return [row.word for row in rows if row.word != word]
-    
+    from anagrammer.dictionary import get_anagrams
+
+    return get_anagrams(word, session)
 
 
 @app.get("/subanagrams/{word}")
-def get_sub_anagrams(word: str, best_only: bool = False):
-    d = get_dictionary()
-    anagrams = d.get_sub_anagrams(word)
+def get_sub_anagrams(
+    word: str, best_only: bool = False, session: Session = Depends(get_session)
+) -> dict[str, Any]:
+    from anagrammer.dictionary import get_sub_anagrams
+
+    anagrams: list[str] = get_sub_anagrams(word, session)
+    anagrams = sorted(anagrams, key=len, reverse=True)
     max_len = len(anagrams[0])  # longest first so this is the max
 
-    sub_anagrams = {}
+    sub_anagrams: dict[int, dict[str, Any]] = {}
     for anagram in anagrams:
         if best_only and len(anagram) != max_len:
             break
-        sub = sub_anagrams.get(len(anagram), {})
-        sub_words = sub.get("words", [])
+        sub: dict[str, Any] = sub_anagrams.get(len(anagram), {})
+        sub_words: list[str] = sub.get("words", [])
         sub_words.append(anagram)
         sub["words"] = sub_words
         sub["count"] = len(sub_words)
