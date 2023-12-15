@@ -10,6 +10,9 @@ build:
 run: build
 	$(COMPOSE) up -d
 
+run_prod: build
+	$(COMPOSE_PROD) up -d
+
 dev: .venv
 	./startdev
 
