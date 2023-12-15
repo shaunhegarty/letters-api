@@ -24,26 +24,25 @@ def create_db_and_tables():
     SQLModel.metadata.create_all(engine)
 
 
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     create_db_and_tables()
     yield
 
+
 app = FastAPI(lifespan=lifespan)
 
 origins = [
-    "http://letters.shaunhegarty,com",
+    "https://letters.shaunhegarty.com",
 ]
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
-    allow_credentials=True,
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
 
 
 @app.get("/")
