@@ -12,7 +12,6 @@ services:
         volumes:
             - .:/var/www/letters-api/
         environment:
-            FLASK_ENV: development
             POSTGRES_HOSTNAME: db
         depends_on:
             - "db"

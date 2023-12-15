@@ -6,3 +6,4 @@ SQLAlchemy==2.0.23
 sqlmodel==0.0.14
 pydantic==2.5.2
 pydantic_core==2.14.5
+SQLAlchemy-Utils==0.41.1
