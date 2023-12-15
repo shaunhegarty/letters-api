@@ -38,10 +38,10 @@ logs:
 	$(COMPOSE) logs -f web
 
 test: .venv
-	. .venv/bin/activate; python -m pytest test/tests.py
+	. .venv/bin/activate; python -m pytest test/*.py
 
-mypy: build
-	$(COMPOSE) run --rm web mypy --config-file .mypy.ini .
+mypy: .venv
+	. .venv/bin/activate; mypy --config-file .mypy.ini .
 
 .venv: .venv/touchfile
 

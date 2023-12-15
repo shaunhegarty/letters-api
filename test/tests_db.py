@@ -1,5 +1,5 @@
-import json
 import os
+from test.utils import setup_ladders
 
 import pytest
 from sqlalchemy_utils import create_database, database_exists
@@ -13,7 +13,7 @@ from anagrammer.ladder import (
 )
 from anagrammer.models import Dictionary, Ladder, WordScore
 from config import insertdictionary
-from config.insertdictionary import insert_word_ladder, load_common, load_sowpods
+from config.insertdictionary import load_common, load_sowpods
 
 POSTGRES_HOSTNAME = os.environ.get("POSTGRES_HOSTNAME", "localhost")
 SQLALCHEMY_DATABASE_URL = f"postgresql://api:letters@{POSTGRES_HOSTNAME}/"
@@ -69,7 +69,7 @@ def test_get_sub_anagrams(session: Session):
     anagrams = get_sub_anagrams(word="aboard", session=session)
     assert "abroad" in anagrams
     assert "abord" in anagrams
-    assert "aa"
+    assert "aa" in anagrams
 
 
 def test_get_conundrums(session: Session):
@@ -141,31 +141,14 @@ def test_populate_word_scores(session: Session):
     word_scores = insertdictionary.get_word_scores(session=session)
     insertdictionary.insert_word_scores(session=session, word_scores=word_scores)
 
-    word_score: WordScore = session.exec(
+    word_score: WordScore | None = session.exec(
         select(WordScore)
         .where(WordScore.score == 1000)
         .where(WordScore.dictionary == "common")
     ).first()
+    assert word_score is not None
     assert word_score.word == "wing"
 
-
-def setup_ladders(session: Session):
-    data: dict[str, list[list[str]]] = json.load(
-        open("test/ladders.json", "r", encoding="utf-8")
-    )
-
-    # get all the words
-    words = set()
-    for _, ladders in data.items():
-        for lad in ladders:
-            for word in lad:
-                words.add(word)
-
-    # build up a dummy word_scores dict
-    word_scores: dict[str, int] = {word: 1 for word in words}
-
-    # insert the test data
-    insert_word_ladder(data=data, word_scores=word_scores, session=session)
 
 
 # class TestLadderSearch(unittest.TestCase):

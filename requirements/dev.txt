@@ -8,3 +8,5 @@ types-sqlalchemy-utils==1.0.1
 mypy==1.7.1
 mypy-extensions==1.0.0
 ruff==0.1.8
+httpcore==1.0.2
+httpx==0.25.2

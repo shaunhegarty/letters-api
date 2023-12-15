@@ -9,8 +9,10 @@ from anagrammer.models import Ladder, WordLadderOptions, WordScore
 def word_pair_results_to_json(results: Sequence[Ladder], original_pair: str) -> dict[str, Any]:
     """Assumes results are for a single word_pair"""
     reverse_ladder = False
-    if results and results[0].pair:
+
+    if word_pair := results and results[0].pair:
         reverse_ladder = results[0].pair != original_pair
+        word_pair = original_pair
 
     def process_chain(chain: str) -> str:
         if reverse_ladder:
@@ -19,11 +21,11 @@ def word_pair_results_to_json(results: Sequence[Ladder], original_pair: str) -> 
 
     return {
         "ladder": {
-            "pair": results and results[0].pair,
+            "pair": word_pair,
             "chain": [process_chain(r.chain) for r in results],
             "minimum_chain": results and max(r.length for r in results),
             "minimum_difficulty": results
-            and min(r.hardest_word_score for r in results),
+            and min(r.hardest_word_score for r in results),  # type: ignore
         },
     }
 
@@ -141,11 +143,12 @@ def get_words_and_scores(
 def get_random_ladder_in_difficulty_range(
     session: Session, word_length: int, upper_bound: int, lower_bound: int = 0
 ) -> dict[str, Any]:
-    results = get_ladders_by_length_and_difficulty(
+    results: Sequence[Ladder] = get_ladders_by_length_and_difficulty(
         session=session,
         word_length=word_length,
         upper_bound=upper_bound,
         lower_bound=lower_bound,
     )
     rand = random.SystemRandom().randint(0, len(results))
-    return word_pair_results_to_json([list(results)[rand]])
+    random_ladder: Ladder = results[rand]
+    return word_pair_results_to_json([random_ladder], original_pair=random_ladder.pair)

@@ -116,6 +116,7 @@ def get_hardest_word(ladder: Ladder, word_scores: dict[str, int]) -> tuple[str, 
 
 
 def get_word_scores(session: Session) -> dict[str, int]:
+    """Rank the words by frequency and assign it as a score"""
     results = session.exec(
         select(
             models.Dictionary,
