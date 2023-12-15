@@ -1,5 +1,6 @@
 import logging
 from contextlib import asynccontextmanager
+from random import randint
 from typing import Any
 
 from fastapi import Depends, FastAPI
@@ -73,8 +74,15 @@ def get_valid(word: str, session: Session = Depends(get_session)):
 
 
 @app.get("/conundrum/{length}")
-def get(length: int, session: Session = Depends(get_session)):
+def get_conundrums(length: int, session: Session = Depends(get_session)):
     return dictionary.get_conundrums(length, session)
+
+
+@app.get("/conundrum/{length}/random")
+def get_random_conundurm(length: int, session: Session = Depends(get_session)):
+    conundra = dictionary.get_conundrums(length, session)
+    index = randint(0, len(conundra) - 1)
+    return conundra[index]
 
 
 @app.get("/words/{length}")

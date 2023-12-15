@@ -115,6 +115,11 @@ def test_get_ladder(session: Session):
     )
     assert pair_ladder["ladder"]["chain"][0] == "came,wame,wale,wall,will"
 
+    pair_ladder = ladder.get_word_ladder_for_word_pair(
+        word_pair="will-came", session=session
+    )
+    assert pair_ladder["ladder"]["chain"][0] == "will,wall,wale,wame,came"
+
 
 def test_search_ladders(session: Session):
     setup_ladders(session)

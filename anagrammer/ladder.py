@@ -6,12 +6,21 @@ from sqlmodel import Session, func, or_, select, col
 from anagrammer.models import Ladder, WordLadderOptions, WordScore
 
 
-def word_pair_results_to_json(results) -> dict[str, Any]:
+def word_pair_results_to_json(results: Sequence[Ladder], original_pair: str) -> dict[str, Any]:
     """Assumes results are for a single word_pair"""
+    reverse_ladder = False
+    if results and results[0].pair:
+        reverse_ladder = results[0].pair != original_pair
+
+    def process_chain(chain: str) -> str:
+        if reverse_ladder:
+            return ",".join(reversed(chain.split(",")))
+        return chain
+
     return {
         "ladder": {
             "pair": results and results[0].pair,
-            "chain": [r.chain for r in results],
+            "chain": [process_chain(r.chain) for r in results],
             "minimum_chain": results and max(r.length for r in results),
             "minimum_difficulty": results
             and min(r.hardest_word_score for r in results),
@@ -39,14 +48,18 @@ def ladders_to_json(results: Sequence[Ladder]) -> LadderJSON:
 
     return {"ladders": ladders}
 
+def _flip_word_pair(word_pair: str) -> str:
+    return "-".join(reversed(word_pair.split("-")))
 
 def get_word_ladder_for_word_pair(word_pair: str, session: Session) -> dict[str, Any]:
+    flipped_word_pair: str = _flip_word_pair(word_pair)
+
     results: Sequence[Ladder] = session.exec(
         select(Ladder)
-        .where(Ladder.pair == word_pair)
+        .where(or_(Ladder.pair == word_pair, Ladder.pair == flipped_word_pair))
         .order_by(col(Ladder.hardest_word_score))
     ).all()
-    return word_pair_results_to_json(results)
+    return word_pair_results_to_json(results, original_pair=word_pair)
 
 
 def get_ladders_by_length_and_difficulty(
