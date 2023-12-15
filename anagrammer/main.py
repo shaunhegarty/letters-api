@@ -4,6 +4,7 @@ from random import randint
 from typing import Any
 
 from fastapi import Depends, FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from sqlmodel import Session, SQLModel
 
 from anagrammer.database import engine
@@ -23,13 +24,26 @@ def create_db_and_tables():
     SQLModel.metadata.create_all(engine)
 
 
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     create_db_and_tables()
     yield
 
-
 app = FastAPI(lifespan=lifespan)
+
+origins = [
+    "http://letters.shaunhegarty,com",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 
 
 @app.get("/")
