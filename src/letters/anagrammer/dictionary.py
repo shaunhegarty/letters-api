@@ -4,7 +4,7 @@ from typing import Sequence
 
 from sqlmodel import Session, func, select
 
-from anagrammer.models import Dictionary
+from letters.anagrammer.models import Dictionary
 
 
 @cache

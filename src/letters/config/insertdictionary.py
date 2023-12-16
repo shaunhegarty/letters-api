@@ -8,8 +8,8 @@ from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy_utils import create_database, database_exists
 from sqlmodel import Session, SQLModel, col, select
 
-from anagrammer import models
-from anagrammer.database import engine
+from letters.anagrammer import models
+from letters.anagrammer.database import engine
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -181,9 +181,13 @@ def setup_ladders() -> None:
         insert_word_ladders(session=session, word_scores=word_scores)
 
 
-if __name__ == "__main__":
+def main() -> None:
     if not database_exists(engine.url):
         create_database(engine.url)
         SQLModel.metadata.create_all(engine)
     setup_dictionaries()
     setup_ladders()
+
+
+if __name__ == "__main__":
+    main()

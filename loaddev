@@ -2,4 +2,4 @@
 
 source .venv/bin/activate
 cd src/
-uvicorn letters.anagrammer.main:app --reload
+python -m letters.config.insertdictionary

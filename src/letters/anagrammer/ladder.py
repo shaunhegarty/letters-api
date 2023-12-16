@@ -1,12 +1,14 @@
 import random
 from typing import Any, Sequence
 
-from sqlmodel import Session, func, or_, select, col
+from sqlmodel import Session, col, func, or_, select
 
-from anagrammer.models import Ladder, WordLadderOptions, WordScore
+from letters.anagrammer.models import Ladder, WordLadderOptions, WordScore
 
 
-def word_pair_results_to_json(results: Sequence[Ladder], original_pair: str) -> dict[str, Any]:
+def word_pair_results_to_json(
+    results: Sequence[Ladder], original_pair: str
+) -> dict[str, Any]:
     """Assumes results are for a single word_pair"""
     reverse_ladder = False
 
@@ -50,8 +52,10 @@ def ladders_to_json(results: Sequence[Ladder]) -> LadderJSON:
 
     return {"ladders": ladders}
 
+
 def _flip_word_pair(word_pair: str) -> str:
     return "-".join(reversed(word_pair.split("-")))
+
 
 def get_word_ladder_for_word_pair(word_pair: str, session: Session) -> dict[str, Any]:
     flipped_word_pair: str = _flip_word_pair(word_pair)

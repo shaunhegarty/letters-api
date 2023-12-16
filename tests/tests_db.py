@@ -1,19 +1,19 @@
 import os
-from test.utils import setup_ladders
+from tests.utils import setup_ladders
 
 import pytest
 from sqlalchemy_utils import create_database, database_exists
 from sqlmodel import Session, SQLModel, create_engine, select
 
-from anagrammer import dictionary, ladder
-from anagrammer.dictionary import get_anagrams, get_conundrums, get_sub_anagrams
-from anagrammer.ladder import (
+from letters.anagrammer import dictionary, ladder
+from letters.anagrammer.dictionary import get_anagrams, get_conundrums, get_sub_anagrams
+from letters.anagrammer.ladder import (
     get_easy_ladders_by_word_length,
     get_ladders_by_length_and_difficulty,
 )
-from anagrammer.models import Dictionary, Ladder, WordScore
-from config import insertdictionary
-from config.insertdictionary import load_common, load_sowpods
+from letters.anagrammer.models import Dictionary, Ladder, WordScore
+from letters.config import insertdictionary
+from letters.config.insertdictionary import load_common, load_sowpods
 
 POSTGRES_HOSTNAME = os.environ.get("POSTGRES_HOSTNAME", "localhost")
 SQLALCHEMY_DATABASE_URL = f"postgresql://api:letters@{POSTGRES_HOSTNAME}/"
@@ -148,7 +148,6 @@ def test_populate_word_scores(session: Session):
     ).first()
     assert word_score is not None
     assert word_score.word == "wing"
-
 
 
 # class TestLadderSearch(unittest.TestCase):
