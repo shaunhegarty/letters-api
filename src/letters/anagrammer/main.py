@@ -7,8 +7,8 @@ from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sqlmodel import Session, SQLModel
 
-from anagrammer.database import engine
-from anagrammer.models import WordLadderOptions
+from letters.anagrammer.database import engine
+from letters.anagrammer.models import WordLadderOptions
 
 from . import dictionary, ladder
 

@@ -1,4 +1,5 @@
 #!/bin/bash
 
 source .venv/bin/activate
-uvicorn anagrammer.main:app --reload
+cd src/
+uvicorn letters.anagrammer.main:app --reload

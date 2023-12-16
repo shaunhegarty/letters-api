@@ -1,7 +1,7 @@
 import json
 from sqlmodel import Session
 
-from config.insertdictionary import (
+from letters.config.insertdictionary import (
     insert_word_ladder,
     get_word_scores,
     insert_word_scores,
@@ -11,7 +11,7 @@ from config.insertdictionary import (
 
 def setup_ladders(session: Session):
     data: dict[str, list[list[str]]] = json.load(
-        open("test/ladders.json", "r", encoding="utf-8")
+        open("tests/ladders.json", "r", encoding="utf-8")
     )
 
     # get all the words

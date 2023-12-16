@@ -2,7 +2,7 @@
 COMPOSE := docker compose -f docker-compose.dev.yml
 COMPOSE_PROD := docker compose
 
-.PHONY: build run run_dev db_only psql stop logs mypy test check_db
+.PHONY: build run dev db_only psql stop logs mypy test check_db
 
 build:
 	$(COMPOSE) build
@@ -24,7 +24,7 @@ psql:
 
 setup: build db_only
 	$(COMPOSE) run --rm db dropdb --if-exists 'words'
-	$(COMPOSE) run --rm web python -m config.insertdictionary
+	$(COMPOSE) run --rm web python -m src.letters.config.insertdictionary
 
 setup_prod: build
 	$(COMPOSE_PROD) up -d db
@@ -38,16 +38,15 @@ logs:
 	$(COMPOSE) logs -f web
 
 test: .venv
-	. .venv/bin/activate; python -m pytest test/*.py
+	. .venv/bin/activate; python -m pytest tests/*.py
 
 mypy: .venv
 	. .venv/bin/activate; mypy --config-file .mypy.ini .
 
 .venv: .venv/touchfile
 
-.venv/touchfile: requirements/dev.txt requirements/base.txt
-	python3.11 -m venv .venv
-	.venv/bin/pip install -r requirements/dev.txt
+.venv/touchfile: pyproject.toml
+	pdm install
 	touch .venv/touchfile
 
 env: .venv
