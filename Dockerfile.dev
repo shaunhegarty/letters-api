@@ -27,6 +27,7 @@ COPY --from=builder /project/__pypackages__/3.10/bin/* /bin/
 
 
 COPY src/ /project/src
+COPY dictionaries/ /project/src/dictionaries
 
 WORKDIR /project/src
 

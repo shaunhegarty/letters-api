@@ -10,8 +10,8 @@ build:
 run: build
 	$(COMPOSE) up -d
 
-run_prod: build
-	$(COMPOSE_PROD) up -d
+run_prod:
+	$(COMPOSE_PROD) up -d --build
 
 dev: .venv
 	./startdev
@@ -24,12 +24,12 @@ psql:
 
 setup: build db_only
 	$(COMPOSE) run --rm db dropdb --if-exists 'words'
-	$(COMPOSE) run --rm web python -m src.letters.config.insertdictionary
+	$(COMPOSE) run --rm web python -m letters.config.insertdictionary
 
-setup_prod: build
+setup_prod:
 	$(COMPOSE_PROD) up -d db
 	$(COMPOSE_PROD) run --rm db dropdb --if-exists 'words'
-	$(COMPOSE_PROD) run --rm web python -m config.insertdictionary
+	$(COMPOSE_PROD) run --rm --build  web python -m letters.config.insertdictionary
 
 stop:
 	$(COMPOSE) down

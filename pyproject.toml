@@ -35,7 +35,3 @@ test = [
 
 [tool.pytest.ini_options]
 pythonpath = "src"
-
-
-[tool.pdm.scripts]
-load = {call = "letters.config.insertdictionary:main"}

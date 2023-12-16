@@ -26,9 +26,10 @@ COPY --from=builder /project/__pypackages__/3.10/lib /project/pkgs
 COPY --from=builder /project/__pypackages__/3.10/bin/* /bin/
 
 COPY src/ /project/src
+COPY dictionaries/ /project/src/dictionaries
 
 WORKDIR /project/src
 
 # Run apache server
 EXPOSE 80
-CMD ["uvicorn", "letters.anagrammer.main:app", "--host", "0.0.0.0", "--port", "5001"]
+CMD ["uvicorn", "letters.anagrammer.main:app", "--host", "0.0.0.0", "--port", "5000"]
