@@ -32,4 +32,3 @@ WORKDIR /project/src
 
 # Run apache server
 EXPOSE 80
-CMD ["uvicorn", "letters.anagrammer.main:app", "--host", "0.0.0.0", "--port", "5000"]

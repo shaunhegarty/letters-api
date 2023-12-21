@@ -1,6 +1,7 @@
+include .env
+
 # Define variables
-COMPOSE := docker compose -f docker-compose.dev.yml
-COMPOSE_PROD := docker compose
+COMPOSE := docker compose -f docker-compose.yml -f docker-compose.${ENVIRONMENT}.yml
 
 .PHONY: build run dev db_only psql stop logs mypy test check_db
 
@@ -9,9 +10,6 @@ build:
 
 run: build
 	$(COMPOSE) up -d
-
-run_prod:
-	$(COMPOSE_PROD) up -d --build
 
 dev: .venv
 	./startdev
@@ -25,11 +23,6 @@ psql:
 setup: build db_only
 	$(COMPOSE) run --rm db dropdb --if-exists 'words'
 	$(COMPOSE) run --rm web python -m letters.config.insertdictionary
-
-setup_prod:
-	$(COMPOSE_PROD) up -d db
-	$(COMPOSE_PROD) run --rm db dropdb --if-exists 'words'
-	$(COMPOSE_PROD) run --rm --build  web python -m letters.config.insertdictionary
 
 stop:
 	$(COMPOSE) down

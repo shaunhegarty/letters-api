@@ -7,14 +7,14 @@ services:
         image: letters-api
         container_name: "api"
         restart: "always"
-        ports:
-            - "127.0.0.1:5000:5000"
         environment:
             POSTGRES_HOSTNAME: db
+            HONEYCOMB_API_KEY: ${HONEYCOMB_API_KEY}
+            OTEL_SERVICE_NAME: ${OTEL_SERVICE_NAME}
         depends_on:
             - "db"
         networks:
-            - api-network        
+            - api-network    
     db:
         image: "postgres"
         container_name: "letters_db"

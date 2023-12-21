@@ -12,3 +12,4 @@ source .env
 # Start uvicorn
 cd src/
 uvicorn letters.anagrammer.main:app --reload
+# opentelemetry-instrument uvicorn letters.anagrammer.main:app

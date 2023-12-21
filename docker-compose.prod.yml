@@ -1,0 +1,10 @@
+version: '3'
+services:
+    web:
+        image: letters-api
+        ports:
+            - "127.0.0.1:5000:5000"
+        command: ["opentelemetry-instrument", "uvicorn", "letters.anagrammer.main:app", "--host", "0.0.0.0", "--port", "5000"]            
+    db:
+        ports:
+            - "5432:5432"

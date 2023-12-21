@@ -1,50 +1,12 @@
 version: '3'
 services:
     web:
-        build:
-            context: .
-            dockerfile: Dockerfile.dev
         image: letters-api:dev
-        container_name: "api"
-        restart: "always"
         ports:
             - "5001:5001"
         volumes:
             - ./src/letters/:/project/src/letters/
-        environment:
-            POSTGRES_HOSTNAME: db
-        depends_on:
-            - "db"
-        networks:
-            - api-network
+        command: ["uvicorn", "letters.anagrammer.main:app", "--reload", "--host", "0.0.0.0", "--port", "5000"]  
     db:
-        image: "postgres"
-        container_name: "letters_db"
-        restart: "always"
         ports:
             - "5432:5432"
-        environment:
-            POSTGRES_DB: words
-            POSTGRES_USER: api
-            POSTGRES_PASSWORD: letters
-            PGDATABASE: words # pg vars are for psql
-            PGUSER: api
-            PGHOST: db
-            PGPASSWORD: letters
-        volumes:
-            - pgVolume:/var/lib/postgresql/data
-        networks:
-            api-network:
-                # The aliases can be used as host names when creating connections
-                aliases:
-                    - pgLettersApi
-
-# Due to the way Docker works, you can't just refer to localhost. The most sensible way to do this 
-# seems to be create a network across the containers. 
-networks:
-    api-network:
-        driver: bridge
-
-# This creates a named volume for persisting data in the postgres db
-volumes:
-    pgVolume:
