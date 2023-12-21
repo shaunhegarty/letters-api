@@ -38,14 +38,6 @@ services:
                 # The aliases can be used as host names when creating connections
                 aliases:
                     - pgLettersApi
-    telemetry:
-        image: jaegertracing/all-in-one:1.52
-        container_name: telemetry
-        restart: "always"
-        ports:
-            - "16686:16686"
-        networks:
-            - api-network
 
 # Due to the way Docker works, you can't just refer to localhost. The most sensible way to do this 
 # seems to be create a network across the containers. 

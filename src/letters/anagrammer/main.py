@@ -5,8 +5,8 @@ from typing import Any
 
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 from sqlmodel import Session, SQLModel
-from letters.config.telemetry import get_tracer
 
 from letters.anagrammer.database import engine
 from letters.anagrammer.models import WordLadderOptions
@@ -32,6 +32,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(lifespan=lifespan)
+FastAPIInstrumentor.instrument_app(app)
 
 origins = ["*"]
 
@@ -43,44 +44,36 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-tracer = get_tracer(__name__)
 
 @app.get("/")
 async def hello():
-    with tracer.start_as_current_span("hello") as span:
-        span.set_attribute("greeting", "hello")
-        return {"greeting": "hello"}
+    return {"greeting": "hello"}
 
 
 @app.get("/anagrams/{word}")
 def get_anagrams(word: str, session: Session = Depends(get_session)):
-    with tracer.start_as_current_span("get_anagrams") as span:
-        span.set_attribute("word", word)
-        return dictionary.get_anagrams(word, session)
+    return dictionary.get_anagrams(word, session)
 
 
 @app.get("/subanagrams/{word}")
 def get_sub_anagrams(
     word: str, best_only: bool = False, session: Session = Depends(get_session)
 ) -> dict[str, Any]:
-    
-    with tracer.start_as_current_span("get_subanagrams") as span:
-        span.set_attribute("word", word)
-        anagrams: list[str] = dictionary.get_sub_anagrams(word, session)
-        anagrams = sorted(anagrams, key=len, reverse=True)
-        max_len = len(anagrams[0])  # longest first so this is the max
+    anagrams: list[str] = dictionary.get_sub_anagrams(word, session)
+    anagrams = sorted(anagrams, key=len, reverse=True)
+    max_len = len(anagrams[0])  # longest first so this is the max
 
-        sub_anagrams: dict[int, dict[str, Any]] = {}
-        for anagram in anagrams:
-            if best_only and len(anagram) != max_len:
-                break
-            sub: dict[str, Any] = sub_anagrams.get(len(anagram), {})
-            sub_words: list[str] = sub.get("words", [])
-            sub_words.append(anagram)
-            sub["words"] = sub_words
-            sub["count"] = len(sub_words)
-            sub_anagrams[len(anagram)] = sub
-        return {"max": max_len, "words": sub_anagrams}
+    sub_anagrams: dict[int, dict[str, Any]] = {}
+    for anagram in anagrams:
+        if best_only and len(anagram) != max_len:
+            break
+        sub: dict[str, Any] = sub_anagrams.get(len(anagram), {})
+        sub_words: list[str] = sub.get("words", [])
+        sub_words.append(anagram)
+        sub["words"] = sub_words
+        sub["count"] = len(sub_words)
+        sub_anagrams[len(anagram)] = sub
+    return {"max": max_len, "words": sub_anagrams}
 
 
 @app.get("/validate/{word}")

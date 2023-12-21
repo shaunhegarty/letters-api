@@ -1,5 +1,14 @@
 #!/bin/bash
 
+# start virtual env
 source .venv/bin/activate
+
+# Ensure loaded vars are exported and available to the python process
+set -a
+
+# Load env vars
+source .env
+
+# Start uvicorn
 cd src/
 uvicorn letters.anagrammer.main:app --reload
