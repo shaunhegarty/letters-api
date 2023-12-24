@@ -51,3 +51,10 @@ class WordLadderOptions(SQLModel):
     difficulty: list[int] = [1]
     length: list[int] = [3]
     page_size: int = 200
+
+
+class ValidatedWord(SQLModel):
+    word: str
+    dictionary: str
+    dictionary_size: int
+    valid: bool

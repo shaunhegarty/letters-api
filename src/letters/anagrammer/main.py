@@ -9,7 +9,7 @@ from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 from sqlmodel import Session, SQLModel
 
 from letters.anagrammer.database import engine
-from letters.anagrammer.models import WordLadderOptions
+from letters.anagrammer.models import ValidatedWord, WordLadderOptions
 
 from . import dictionary, ladder
 
@@ -77,14 +77,14 @@ def get_sub_anagrams(
 
 
 @app.get("/validate/{word}")
-def get_valid(word: str, session: Session = Depends(get_session)):
+def get_valid(word: str, session: Session = Depends(get_session)) -> ValidatedWord:
     dict_name = "sowpods"
-    return {
-        "word": word,
-        "dictionary": dict_name,
-        "dictionary_size": dictionary.get_dict_size(dict_name, session),
-        "valid": dictionary.contains_word(word, session),
-    }
+    return ValidatedWord(
+        word=word,
+        dictionary=dict_name,
+        dictionary_size=dictionary.get_dict_size(dict_name, session),
+        valid=dictionary.contains_word(word, session),
+    )
 
 
 @app.get("/conundrum/{length}")
