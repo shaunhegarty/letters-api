@@ -21,7 +21,7 @@ def get_dict_size(dictionary: str, session: Session) -> int:
 def contains_word(word: str, session: Session) -> bool:
     row: Dictionary | None = session.exec(
         select(Dictionary)
-        .where(Dictionary.word == word)
+        .where(Dictionary.word == word.lower())
         .where(Dictionary.dictionary == "sowpods")
     ).first()
     return bool(row)

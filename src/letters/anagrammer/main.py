@@ -80,6 +80,7 @@ def get_sub_anagrams(
 def get_valid(word: str, session: Session = Depends(get_session)):
     dict_name = "sowpods"
     return {
+        "word": word,
         "dictionary": dict_name,
         "dictionary_size": dictionary.get_dict_size(dict_name, session),
         "valid": dictionary.contains_word(word, session),
