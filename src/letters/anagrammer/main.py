@@ -1,7 +1,6 @@
 import logging
 from contextlib import asynccontextmanager
 from random import randint
-from typing import Any
 
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -9,7 +8,12 @@ from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 from sqlmodel import Session, SQLModel
 
 from letters.anagrammer.database import engine
-from letters.anagrammer.models import ValidatedWord, WordLadderOptions
+from letters.anagrammer.models import (
+    Anagrams,
+    SubAnagrams,
+    ValidatedWord,
+    WordLadderOptions,
+)
 
 from . import dictionary, ladder
 
@@ -58,22 +62,20 @@ def get_anagrams(word: str, session: Session = Depends(get_session)):
 @app.get("/subanagrams/{word}")
 def get_sub_anagrams(
     word: str, best_only: bool = False, session: Session = Depends(get_session)
-) -> dict[str, Any]:
+) -> SubAnagrams:
     anagrams: list[str] = dictionary.get_sub_anagrams(word, session)
     anagrams = sorted(anagrams, key=len, reverse=True)
     max_len = len(anagrams[0])  # longest first so this is the max
 
-    sub_anagrams: dict[int, dict[str, Any]] = {}
+    sub_anagrams: dict[int, Anagrams] = {}
     for anagram in anagrams:
         if best_only and len(anagram) != max_len:
             break
-        sub: dict[str, Any] = sub_anagrams.get(len(anagram), {})
-        sub_words: list[str] = sub.get("words", [])
-        sub_words.append(anagram)
-        sub["words"] = sub_words
-        sub["count"] = len(sub_words)
+        sub: Anagrams = sub_anagrams.get(len(anagram), Anagrams())
+        sub.words.append(anagram)
+        sub.count = len(sub.words)
         sub_anagrams[len(anagram)] = sub
-    return {"max": max_len, "words": sub_anagrams}
+    return SubAnagrams(max=max_len, words=sub_anagrams)
 
 
 @app.get("/validate/{word}")

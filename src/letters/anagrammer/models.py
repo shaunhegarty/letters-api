@@ -58,3 +58,13 @@ class ValidatedWord(SQLModel):
     dictionary: str
     dictionary_size: int
     valid: bool
+
+
+class Anagrams(SQLModel):
+    words: list[str] = []
+    count: int = 0
+
+
+class SubAnagrams(SQLModel):
+    max: int
+    words: dict[int, Anagrams]
