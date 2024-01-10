@@ -1,0 +1,66 @@
+{
+  "onion-axion": [
+    {
+      "source_word": "onion",
+      "target_word": "axion",
+      "path": [
+        "onion",
+        "anion",
+        "axion"
+      ]
+    }
+  ],
+  "onion-anion": [
+    {
+      "source_word": "onion",
+      "target_word": "anion",
+      "path": [
+        "onion",
+        "anion"
+      ]
+    }
+  ],
+  "onion-axiom": [
+    {
+      "source_word": "onion",
+      "target_word": "axiom",
+      "path": [
+        "onion",
+        "anion",
+        "axion",
+        "axiom"
+      ]
+    }
+  ],
+  "onion-union": [
+    {
+      "source_word": "onion",
+      "target_word": "union",
+      "path": [
+        "onion",
+        "union"
+      ]
+    }
+  ],
+  "onion-inion": [
+    {
+      "source_word": "onion",
+      "target_word": "inion",
+      "path": [
+        "onion",
+        "inion"
+      ]
+    }
+  ],
+  "onion-ancon": [
+    {
+      "source_word": "onion",
+      "target_word": "ancon",
+      "path": [
+        "onion",
+        "anion",
+        "ancon"
+      ]
+    }
+  ]
+}
