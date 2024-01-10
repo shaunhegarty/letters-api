@@ -1,6 +1,9 @@
+from __future__ import annotations
+
 import json
 import logging
 import sys
+from pathlib import Path
 
 import requests
 from sqlalchemy import func
@@ -18,7 +21,7 @@ logger.addHandler(handler)
 
 
 def load_common(session: Session, limit: int = 0) -> None:
-    with open("dictionaries/common.frequency.csv", "r", encoding="utf-8") as dictionary:
+    with Path("dictionaries/common.frequency.csv").open(encoding="utf-8") as dictionary:
         source = "wikipedia-word-frequency-list-2019"
         values = []
         count = 0
@@ -33,30 +36,30 @@ def load_common(session: Session, limit: int = 0) -> None:
                     "dictionary": "common",
                     "source": source,
                     "sorted_word": "".join(sorted(word.lower())),
-                }
+                },
             )
             count += 1
             if limit != 0 and count >= limit:
                 break
         statement = insert(models.Dictionary).values(values).on_conflict_do_nothing()
         logger.info("Inserting Common Words (with frequencies) into database.")
-        session.exec(statement)  # type: ignore
+        session.exec(statement)  # mypy: type: ignore
         session.commit()
 
 
 def load_sowpods(session: Session, limit: int = 0) -> None:
-    with open("dictionaries/sowpods.txt", "r", encoding="utf-8") as dictionary:
+    with Path("dictionaries/sowpods.txt").open(encoding="utf-8") as dictionary:
         values = []
         count = 0
         for word in dictionary:
-            word = word.strip()
+            trimmed_word = word.strip()
             values.append(
                 {
-                    "word": word,
-                    "word_length": len(word),
+                    "word": trimmed_word,
+                    "word_length": len(trimmed_word),
                     "dictionary": "sowpods",
-                    "sorted_word": "".join(sorted(word.lower())),
-                }
+                    "sorted_word": "".join(sorted(trimmed_word.lower())),
+                },
             )
             count += 1
             if limit != 0 and count >= limit:
@@ -64,7 +67,7 @@ def load_sowpods(session: Session, limit: int = 0) -> None:
 
         logger.info("Inserting SOWPODS Words into database.")
         statement = insert(models.Dictionary).values(values).on_conflict_do_nothing()
-        session.exec(statement)  # type: ignore
+        session.exec(statement)  # mypy: type: ignore
         session.commit()
 
 
@@ -82,18 +85,28 @@ def setup_dictionaries() -> None:
 Ladder = list[str]
 LadderSet = list[Ladder]
 
+MIN_WORD_LENGTH = 3
+MAX_WORD_LENGTH = 6
 
-def get_ladder_json(word_length) -> dict[str, LadderSet]:
-    assert 3 <= word_length <= 6
+
+def get_ladder_json(word_length: int) -> dict[str, LadderSet]:
+    if MIN_WORD_LENGTH <= word_length <= MAX_WORD_LENGTH:
+        msg = "Word length must be between 3 and 6"
+        raise ValueError(msg)
 
     response = requests.get(
-        f"https://raw.githubusercontent.com/shaunhegarty/word-ladder/master/wordladder/resources/ladder-common-{word_length}.json"
+        f"https://raw.githubusercontent.com/shaunhegarty/word-ladder/master/wordladder/resources/ladder-common-{word_length}.json",
+        timeout=10,
     )
-    data = json.loads(response.content.decode("utf-8"))
-    return data
+    return json.loads(response.content.decode("utf-8"))
 
 
-def sort_word_pair(pair) -> str:
+def get_ladder_json_from_file(filename: Path) -> dict[str, LadderSet]:
+    with Path(filename).open(encoding="utf-8") as f:
+        return json.load(f)
+
+
+def sort_word_pair(pair: str) -> str:
     return "-".join(sorted(pair.split("-")))
 
 
@@ -116,15 +129,14 @@ def get_hardest_word(ladder: Ladder, word_scores: dict[str, int]) -> tuple[str, 
 
 
 def get_word_scores(session: Session) -> dict[str, int]:
-    """Rank the words by frequency and assign it as a score"""
+    """Rank the words by frequency and assign it as a score."""
     results = session.exec(
         select(
             models.Dictionary,
             func.rank().over(order_by=col(models.Dictionary.frequency).desc()),
-        ).where(models.Dictionary.dictionary == "common")
+        ).where(models.Dictionary.dictionary == "common"),
     ).all()
-    word_scores = {word.word: rank for word, rank in results}
-    return word_scores
+    return {word.word: rank for word, rank in results}
 
 
 def insert_word_scores(session: Session, word_scores: dict[str, int]) -> None:
@@ -133,14 +145,16 @@ def insert_word_scores(session: Session, word_scores: dict[str, int]) -> None:
     for word, word_score in word_scores.items():
         values.append({"word": word, "dictionary": "common", "score": word_score})
     statement = insert(models.WordScore).values(values).on_conflict_do_nothing()
-    session.exec(statement)  # type: ignore
+    session.exec(statement)  # mypy: type: ignore
     session.commit()
 
 
 def insert_word_ladder(
-    data: dict[str, LadderSet], word_scores: dict[str, int], session: Session
+    data: dict[str, LadderSet],
+    word_scores: dict[str, int],
+    session: Session,
 ) -> None:
-    unique_ladder_keys: set[str] = {sort_word_pair(pair) for pair in data.keys()}
+    unique_ladder_keys: set[str] = {sort_word_pair(pair) for pair in data}
 
     logger.debug("%s ladder keys", len(unique_ladder_keys))
     values: list[dict] = []
@@ -159,10 +173,10 @@ def insert_word_ladder(
                     "hardest_word_score": hardest_word_score,
                     "variations": len(ladder_list),
                     "variant": index + 1,
-                }
+                },
             )
     statement = insert(models.Ladder).values(values).on_conflict_do_nothing()
-    session.exec(statement)  # type: ignore
+    session.exec(statement)
     session.commit()
 
 
