@@ -1,5 +1,8 @@
-from sqlmodel import SQLModel, Field
+from __future__ import annotations
+
 from typing import Optional
+
+from sqlmodel import Field, SQLModel
 
 
 class Dictionary(SQLModel, table=True):
@@ -10,10 +13,10 @@ class Dictionary(SQLModel, table=True):
     frequency: Optional[int]
     source: Optional[str]
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return self.__str__()
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.word}"
 
 
@@ -22,7 +25,7 @@ class WordScore(SQLModel, table=True):
     dictionary: str = Field(primary_key=True)
     score: int
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.word}: Score: {self.score}"
 
 
@@ -37,10 +40,10 @@ class Ladder(SQLModel, table=True):
     hardest_word: Optional[str]
     variations: Optional[int]
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return self.__str__()
 
-    def __str__(self):
+    def __str__(self) -> str:
         variations_string = f"{self.variant} of {self.variations}."
         difficulty_string = f"Difficulty: {self.difficulty}."
         return f"{self.pair}: [{self.chain}]. {variations_string} {difficulty_string}"
@@ -48,8 +51,8 @@ class Ladder(SQLModel, table=True):
 
 class WordLadderOptions(SQLModel):
     ladder_filter: Optional[str]
-    difficulty: list[int] = [1]
-    length: list[int] = [3]
+    difficulty: list[int] = Field(default=[1])
+    length: list[int] = Field(default=[3])
     page_size: int = 200
 
 
@@ -61,10 +64,10 @@ class ValidatedWord(SQLModel):
 
 
 class Anagrams(SQLModel):
-    words: list[str] = []
+    words: list[str] = Field(default=[])
     count: int = 0
 
 
 class SubAnagrams(SQLModel):
-    max: int
+    max: int  # noqa: A003
     words: dict[int, Anagrams]
