@@ -154,6 +154,44 @@ def insert_word_ladder(
     word_scores: dict[str, int],
     session: Session,
 ) -> None:
+    if len(data) == 0:
+        return
+
+    if isinstance(next(iter(data.values()))[0], dict):
+        insert_word_ladder_new(session=session, data=data, word_scores=word_scores)
+    else:
+        insert_word_ladder_old(session=session, data=data, word_scores=word_scores)
+
+
+def insert_word_ladder_new(
+    session: Session, data: dict[str, LadderSet], word_scores: dict[str, int]
+) -> None:
+    values: list[dict] = []
+    for key, ladder_list in data.items():
+        for index, ladder_dict in enumerate(ladder_list):
+            ladder = ladder_dict["path"]
+            hardest_word, hardest_word_score = get_hardest_word(ladder, word_scores)
+            values.append(
+                {
+                    "pair": key,
+                    "dictionary": "common",
+                    "chain": ",".join(ladder),
+                    "length": len(ladder),
+                    "difficulty": ladder_difficulty(ladder, word_scores),
+                    "hardest_word": hardest_word,
+                    "hardest_word_score": hardest_word_score,
+                    "variations": len(ladder_list),
+                    "variant": index + 1,
+                },
+            )
+    statement = insert(models.Ladder).values(values).on_conflict_do_nothing()
+    session.exec(statement)
+    session.commit()
+
+
+def insert_word_ladder_old(
+    session: Session, data: dict[str, LadderSet], word_scores: dict[str, int]
+) -> None:
     unique_ladder_keys: set[str] = {sort_word_pair(pair) for pair in data}
 
     logger.debug("%s ladder keys", len(unique_ladder_keys))

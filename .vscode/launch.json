@@ -22,7 +22,7 @@
             "request": "launch",
             "module": "pytest",
             "args": [
-                "test/tests.py",
+                "tests/tests_db.py",
             ],
             "jinja": true,
             "justMyCode": true
