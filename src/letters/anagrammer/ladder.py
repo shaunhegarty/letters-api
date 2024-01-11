@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import random
 from typing import Any, Sequence
 
@@ -9,7 +11,7 @@ from letters.anagrammer.models import Ladder, WordLadderOptions, WordScore
 def word_pair_results_to_json(
     results: Sequence[Ladder], original_pair: str
 ) -> dict[str, Any]:
-    """Assumes results are for a single word_pair"""
+    """Assumes results are for a single word_pair."""
     reverse_ladder = False
 
     if word_pair := results and results[0].pair:
@@ -27,7 +29,7 @@ def word_pair_results_to_json(
             "chain": [process_chain(r.chain) for r in results],
             "minimum_chain": results and max(r.length for r in results),
             "minimum_difficulty": results
-            and min(r.hardest_word_score for r in results),  # type: ignore
+            and min(r.hardest_word_score for r in results),  # mypy: type: ignore
         },
     }
 
@@ -99,7 +101,7 @@ def search_ladders(options: WordLadderOptions, session: Session) -> LadderJSON:
         )
     if options.length:
         query = query.filter(
-            or_(False, *[func.length(Ladder.pair) == p for p in pair_lengths])
+            or_(False, *[func.length(Ladder.pair) == p for p in pair_lengths])  # noqa: FBT003
         )
     if options.ladder_filter:
         query = query.filter(col(Ladder.pair).contains(options.ladder_filter))
@@ -122,10 +124,11 @@ def get_ladders_by_difficulty_class(
 
 
 def get_easy_ladders_by_word_length(session: Session, word_length: int) -> LadderJSON:
+    max_ladder_difficulty = 10000
     results = session.exec(
         select(Ladder)
         .filter(func.length(Ladder.pair) == word_length * 2 + 1)
-        .filter(col(Ladder.difficulty) < 10000)
+        .filter(col(Ladder.difficulty) < max_ladder_difficulty)
         .filter(col(Ladder.difficulty) > 0)
         .order_by(col(Ladder.difficulty), col(Ladder.hardest_word_score))
     ).all()

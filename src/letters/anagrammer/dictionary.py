@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from functools import cache
 from itertools import combinations
 from typing import Sequence
@@ -44,13 +46,15 @@ def get_sub_anagrams(word: str, session: Session) -> list[str]:
 
     subsets: list[str] = []
 
-    for i in range(2, len(sorted_word) + 1):
-        for subset in combinations(sorted_word, i):
-            subsets.append("".join(subset))
+    subsets = [
+        "".join(subset)
+        for i in range(2, len(sorted_word) + 1)
+        for subset in combinations(sorted_word, i)
+    ]
 
     rows: Sequence[Dictionary] = session.exec(
         select(Dictionary)
-        .where(Dictionary.sorted_word.in_(subsets))  # type: ignore
+        .where(Dictionary.sorted_word.in_(subsets))  # mypy: type: ignore
         .where(Dictionary.dictionary == "sowpods")
     ).all()
     sub_anagrams: list[str] = [row.word for row in rows if row.word != word]
@@ -66,7 +70,7 @@ def get_conundrums(length: int, session: Session) -> list[str]:
         .group_by(Dictionary.sorted_word)
         .having(func.count(Dictionary.sorted_word) == 1)
     ).all()
-    return [word for word in rows]
+    return list(rows)
 
 
 @cache
