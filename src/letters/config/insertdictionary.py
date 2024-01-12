@@ -10,6 +10,7 @@ from sqlalchemy import func
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy_utils import create_database, database_exists
 from sqlmodel import Session, SQLModel, col, select
+from tqdm import tqdm
 
 from letters.anagrammer import models
 from letters.anagrammer.database import engine
@@ -149,6 +150,118 @@ def insert_word_scores(session: Session, word_scores: dict[str, int]) -> None:
     session.commit()
 
 
+class LadderAdder:
+    def __init__(self, session: Session) -> None:
+        self.session = session
+        self.word_scores = get_word_scores(session=session)
+        self.values: list[dict] = []
+        self.insert_count = 0
+        self.progress_bar = None
+        self.files_to_move = []
+
+    def insert_from_files(self, load_path: Path) -> None:
+        if load_path.is_dir():
+            file_list = [
+                file for file in load_path.iterdir() if "ladders.json" in file.name
+            ]
+            batch_size = 10000
+            self.progress_bar = tqdm(
+                file_list, desc="Loading Ladders", total=len(file_list)
+            )
+            for file in file_list:
+                self.gather_from_file(file)
+                self.progress_bar.update(1)
+                self.progress_bar.set_description(f"Processing {file.name}")
+                self.files_to_move.append(file)
+                if len(self.values) > batch_size:
+                    self.progress_bar.set_description(
+                        f"Inserting {len(self.values)} rows"
+                    )
+                    self.insert_values()
+                    self.move_processed_files()
+        else:
+            with load_path.open(encoding="utf-8") as file:
+                data = json.load(file)
+                self.gather_values(data=data)
+                self.insert_values()
+
+    def move_processed_files(self) -> None:
+        for file in self.files_to_move:
+            processed_path = file.parent / "processed"
+            processed_path.mkdir(exist_ok=True)
+            file.rename(processed_path / file.name)
+        self.files_to_move = []
+
+    def insert_values(self) -> None:
+        count = len(self.values)
+        statement = insert(models.Ladder).values(self.values).on_conflict_do_nothing()
+        self.session.exec(statement)
+        self.session.commit()
+        self.values = []
+        self.insert_count += count
+        self.progress_bar.write(f"Inserted {self.insert_count} Ladders")
+
+    def gather_from_file(self, path: Path) -> None:
+        with Path(path).open(encoding="utf-8") as file:
+            data: dict[str, list[list[str]]] = json.load(file)
+            self.gather_values(data=data)
+
+    def gather_values(self, data: dict[str, LadderSet]) -> None:
+        if len(data) == 0:
+            return
+
+        if isinstance(next(iter(data.values()))[0], dict):
+            self.gather_values_new(data)
+        else:
+            self.gather_values_old(data)
+
+    def gather_values_old(self, data: dict[str, LadderSet]) -> None:
+        unique_ladder_keys: set[str] = {sort_word_pair(pair) for pair in data}
+
+        logger.debug("%s ladder keys", len(unique_ladder_keys))
+        values: list[dict] = []
+        for key in unique_ladder_keys:
+            ladder_list: LadderSet = data[key]
+            for index, ladder in enumerate(ladder_list):
+                hardest_word, hardest_word_score = get_hardest_word(
+                    ladder, self.word_scores
+                )
+                values.append(
+                    {
+                        "pair": key,
+                        "dictionary": "common",
+                        "chain": ",".join(ladder),
+                        "length": len(ladder),
+                        "difficulty": ladder_difficulty(ladder, self.word_scores),
+                        "hardest_word": hardest_word,
+                        "hardest_word_score": hardest_word_score,
+                        "variations": len(ladder_list),
+                        "variant": index + 1,
+                    },
+                )
+
+    def gather_values_new(self, data: dict[str, LadderSet]) -> None:
+        for key, ladder_list in data.items():
+            for index, ladder_dict in enumerate(ladder_list):
+                ladder = ladder_dict["path"]
+                hardest_word, hardest_word_score = get_hardest_word(
+                    ladder, self.word_scores
+                )
+                self.values.append(
+                    {
+                        "pair": key,
+                        "dictionary": "common",
+                        "chain": ",".join(ladder),
+                        "length": len(ladder),
+                        "difficulty": ladder_difficulty(ladder, self.word_scores),
+                        "hardest_word": hardest_word,
+                        "hardest_word_score": hardest_word_score,
+                        "variations": len(ladder_list),
+                        "variant": index + 1,
+                    },
+                )
+
+
 def insert_word_ladder(
     data: dict[str, LadderSet],
     word_scores: dict[str, int],
@@ -217,6 +330,7 @@ def insert_word_ladder_old(
     session.exec(statement)
     session.commit()
 
+# TODO(shaun): Remove duplicated functionality  # noqa: TD003, FIX002
 
 def insert_word_ladders(session: Session, word_scores: dict[str, int]) -> None:
     for word_length in range(3, 7):
