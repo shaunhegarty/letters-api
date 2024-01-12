@@ -1,12 +1,15 @@
+# ruff: noqa: S101, ANN201, PLR2004
+import http
 import os
+from typing import Any, Generator
 
 import pytest
 from fastapi.testclient import TestClient
+from letters.anagrammer.main import app, get_session
+from letters.config.insertdictionary import load_sowpods
 from sqlalchemy_utils import create_database, database_exists
 from sqlmodel import Session, SQLModel, create_engine
 
-from letters.anagrammer.main import app, get_session
-from letters.config.insertdictionary import load_sowpods
 from tests.utils import setup_ladders, setup_word_scores
 
 POSTGRES_HOSTNAME = os.environ.get("POSTGRES_HOSTNAME", "localhost")
@@ -22,7 +25,7 @@ if not database_exists(engine.url):
 
 
 @pytest.fixture(name="session")
-def session_fixture():
+def session_fixture() -> Generator[Session, Any, None]:
     engine = create_engine(
         f"{SQLALCHEMY_DATABASE_URL}/api_test_db",
     )
@@ -33,8 +36,8 @@ def session_fixture():
 
 
 @pytest.fixture(name="client")
-def client_fixture(session: Session):
-    def get_session_override():
+def client_fixture(session: Session) -> Generator[TestClient, Any, None]:
+    def get_session_override() -> Session:
         return session
 
     app.dependency_overrides[get_session] = get_session_override
@@ -45,7 +48,7 @@ def client_fixture(session: Session):
 
 def test_hello(client: TestClient):
     response = client.get("/")
-    assert response.status_code == 200
+    assert response.status_code == http.HTTPStatus.OK
     assert response.json() == {"greeting": "hello"}
 
 
