@@ -46,6 +46,13 @@ test = [
 dev = [
     "ipython>=8.20.0",
 ]
+jupyter = [
+    "jupyterlab>=4.0.10",
+]
+embedding = [
+    "sentence-transformers>=2.2.2",
+    "langchain>=0.1.0",
+]
 
 [tool.pytest.ini_options]
 pythonpath = "src"
