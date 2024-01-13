@@ -17,6 +17,9 @@ dev: .venv
 db_only: 
 	$(COMPOSE) up -d db
 
+lab: build
+	. .venv/bin/activate; jupyter-lab
+
 psql: 
 	$(COMPOSE) run --rm db psql
 
