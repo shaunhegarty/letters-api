@@ -26,6 +26,7 @@ dependencies = [
     "opentelemetry-instrumentation-requests>=0.41b0",
     "opentelemetry-instrumentation-urllib3>=0.41b0",
     "tqdm>=4.66.1",
+    "alembic>=1.13.1",
 ]
 requires-python = "==3.10.*"
 readme = "README.md"
@@ -45,6 +46,7 @@ test = [
 ]
 dev = [
     "ipython>=8.20.0",
+    "ruff>=0.1.13",
 ]
 jupyter = [
     "jupyterlab>=4.0.10",

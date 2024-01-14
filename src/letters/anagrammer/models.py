@@ -69,5 +69,5 @@ class Anagrams(SQLModel):
 
 
 class SubAnagrams(SQLModel):
-    max: int  # noqa: A003
+    max: int
     words: dict[int, Anagrams]
