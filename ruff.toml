@@ -16,7 +16,7 @@ exclude = [
     ".venv",
     "__pypackages__",
     "_build",
-    "alembic"
+    "alembic",
     "buck-out",
     "build",
     "dist",
