@@ -33,9 +33,10 @@ readme = "README.md"
 license = {text = "MIT"}
 
 
+[tool.pytest.ini_options]
+pythonpath = "src"
 [tool.pdm]
-package-type = "application"
-
+distribution = false
 [tool.pdm.dev-dependencies]
 typing = [
     "annotated-types==0.6.0",
@@ -56,5 +57,3 @@ embedding = [
     "langchain>=0.1.0",
 ]
 
-[tool.pytest.ini_options]
-pythonpath = "src"
