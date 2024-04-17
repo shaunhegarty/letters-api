@@ -42,7 +42,7 @@ mypy: .venv
 .venv: .venv/touchfile
 
 .venv/touchfile: pyproject.toml
-	pdm install
+	uv pip install -r pyproject.toml
 	touch .venv/touchfile
 
 env: .venv
