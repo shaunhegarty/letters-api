@@ -32,33 +32,25 @@ requires-python = "==3.10.*"
 readme = "README.md"
 license = {text = "MIT"}
 
+[project.optional-dependencies]
+embedding = [
+    "sentence-transformers>=3.0.1",
+]
+
 
 [tool.pytest.ini_options]
 pythonpath = "src"
-[tool.pdm]
-distribution = false
-[tool.pdm.dev-dependencies]
-typing = [
-    "annotated-types==0.6.0",
-]
-test = [
-    "pytest>=7.4.3",
-    "httpx>=0.25.2",
-]
-dev = [
-    "ipython>=8.20.0",
-    "ruff>=0.1.13",
-]
-jupyter = [
-    "jupyterlab>=4.0.10",
-]
-embedding = [
-    "sentence-transformers>=2.2.2",
-    "langchain>=0.1.0",
-]
+
 
 [tool.uv]
 dev-dependencies = [
     "ruff>=0.6.2",
+    "pytest>=8.3.2",
+    "annotated-types>=0.7.0",
+    "types-requests>=2.32.0.20240712",
+    "types-sqlalchemy-utils>=1.1.0",
+    "mypy>=1.11.2",
+    "mypy-extensions>=1.0.0",
+    "httpx>=0.27.0",
 ]
 

@@ -6,16 +6,18 @@ RUN apt update && apt install -y gcc g++ libpq-dev python3-dev -y
 RUN pip install uv
 
 # copy files
-COPY requirements/base.txt README.md /project/
+COPY pyproject.toml uv.lock README.md /project/
 COPY src/ /project/src
 
 # install dependencies and project into the local packages directory
 WORKDIR /project
-RUN uv pip install --system -r /project/base.txt
+RUN uv sync --no-dev --no-install-project
 
 COPY dictionaries/ /project/src/dictionaries
 
 WORKDIR /project/src
+
+ENV PATH="/project/.venv/bin:$PATH"
 
 # Run apache server
 EXPOSE 80
