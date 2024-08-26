@@ -57,3 +57,8 @@ embedding = [
     "langchain>=0.1.0",
 ]
 
+[tool.uv]
+dev-dependencies = [
+    "ruff>=0.6.2",
+]
+
