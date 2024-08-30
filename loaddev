@@ -1,5 +1,4 @@
 #!/bin/bash
 
-source .venv/bin/activate
 cd src/
-python -m letters.config.insertdictionary
+uv run python -m letters.config.insertdictionary

@@ -18,7 +18,7 @@ db_only:
 	$(COMPOSE) up -d db
 
 lab: build
-	. .venv/bin/activate; jupyter-lab
+	uv run jupyter-lab
 
 psql: 
 	$(COMPOSE) run --rm db psql
@@ -34,15 +34,15 @@ logs:
 	$(COMPOSE) logs -f web
 
 test: .venv
-	. .venv/bin/activate; python -m pytest tests/*.py
+	uv run pytest tests/*.py
 
 mypy: .venv
-	. .venv/bin/activate; mypy --config-file .mypy.ini .
+	uv run mypy --config-file .mypy.ini .
 
 .venv: .venv/touchfile
 
 .venv/touchfile: pyproject.toml
-	uv pip install -r pyproject.toml
+	uv sync
 	touch .venv/touchfile
 
 env: .venv
