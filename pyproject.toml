@@ -2,9 +2,7 @@
 name = "letters"
 version = "0.1.0"
 description = "Letters API"
-authors = [
-    {name = "shaun", email = "shaunhegarty@users.noreply.github.com"},
-]
+authors = [{ name = "shaun", email = "shaunhegarty@users.noreply.github.com" }]
 dependencies = [
     "fastapi==0.104.1",
     "psycopg2-binary==2.9.3",
@@ -30,12 +28,10 @@ dependencies = [
 ]
 requires-python = ">=3.10"
 readme = "README.md"
-license = {text = "MIT"}
+license = { text = "MIT" }
 
 [project.optional-dependencies]
-embedding = [
-    "sentence-transformers>=3.0.1",
-]
+embedding = ["sentence-transformers>=3.0.1"]
 
 
 [tool.pytest.ini_options]
@@ -93,7 +89,18 @@ target-version = "py38"
 # Unlike Flake8, Ruff doesn't enable pycodestyle warnings (`W`) or
 # McCabe complexity (`C901`) by default.
 select = ["ALL"]
-ignore = ["B008", "D100", "D101", "D102", "D103", "D105", "D107", "COM812", "UP007", "ANN101"]
+ignore = [
+    "B008",
+    "D100",
+    "D101",
+    "D102",
+    "D103",
+    "D105",
+    "D107",
+    "COM812",
+    "UP007",
+    "ANN101",
+]
 
 # Allow fix for all enabled rules (when `--fix`) is provided.
 fixable = ["ALL"]
@@ -132,4 +139,3 @@ docstring-code-format = false
 # This only has an effect when the `docstring-code-format` setting is
 # enabled.
 docstring-code-line-length = "dynamic"
-
